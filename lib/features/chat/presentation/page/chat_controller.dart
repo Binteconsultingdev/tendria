@@ -280,8 +280,7 @@ class ChatController extends GetxController {
       showSuccessSnackbar('Mensaje enviado. Espera la respuesta.');
       Future.delayed(const Duration(milliseconds: 100), scrollToBottom);
     } catch (e) {
-      messageController.text = message;
-     // showErrorSnackbar('No se pudo enviar: ${cleanExceptionMessage(e)}');
+      messageController.text = message; 
     showCustomAlert(
   context: Get.context!,
   title: 'Saldo insuficiente',
