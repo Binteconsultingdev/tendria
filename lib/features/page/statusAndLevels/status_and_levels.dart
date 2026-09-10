@@ -11,7 +11,7 @@ class StatusAndLevels extends StatefulWidget {
 }
 
 class _StatusAndLevelsScreenState extends State<StatusAndLevels> {
-  int _currentPage = 2; // ajusta según el paso real del onboarding
+  int _currentPage = 2;  
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class _StatusAndLevelsScreenState extends State<StatusAndLevels> {
 
     return Scaffold(
       body: Obx(() {
-        final mode = themeCtrl.themeMode.value; // dispara reactividad
+        final mode = themeCtrl.themeMode.value; 
         return Container(
           width: double.infinity,
           height: double.infinity,
@@ -71,8 +71,7 @@ class _StatusAndLevelsScreenState extends State<StatusAndLevels> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 20),
-
-                        // Título
+ 
                         RichText(
                           text: TextSpan(
                             style: TextStyle(
@@ -148,8 +147,7 @@ class _StatusAndLevelsScreenState extends State<StatusAndLevels> {
                         ),
 
                         const SizedBox(height: 24),
-
-                        // Indicador de páginas
+ 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(5, (index) {
@@ -174,13 +172,11 @@ class _StatusAndLevelsScreenState extends State<StatusAndLevels> {
                     ),
                   ),
                 ),
-
-                // Botón continuar
+ 
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                   child: GestureDetector(
-                    onTap: () {
-                      // TODO: siguiente paso del onboarding
+                    onTap: () { 
                     },
                     child: Container(
                       width: double.infinity,
