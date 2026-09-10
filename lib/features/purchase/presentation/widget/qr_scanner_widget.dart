@@ -57,8 +57,7 @@ class QRScannerWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle
+        children: [ 
           Center(
             child: Container(
               width: 40,
@@ -70,8 +69,7 @@ class QRScannerWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Título
+ 
           Text(
             _getTitle(scannerController, title),
             style: ThemeColor.subtitleLarge.copyWith(
@@ -81,11 +79,10 @@ class QRScannerWidget extends StatelessWidget {
               letterSpacing: 1.5,
             ),
             textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis, // 👈
+            overflow: TextOverflow.ellipsis,  
           ),
           const SizedBox(height: 12),
-
-          // Descripción
+ 
           Text(
             _getDescription(scannerController, description),
             style: ThemeColor.bodyMedium.copyWith(
@@ -93,12 +90,11 @@ class QRScannerWidget extends StatelessWidget {
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,              // 👈
+            maxLines: 2,            
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 20),
-
-          // Cámara
+ 
           SizedBox(
             height: 300,
             child: ClipRRect(
@@ -141,7 +137,7 @@ class QRScannerWidget extends StatelessWidget {
                                     '${_l.t('qr_scan_camera_error')}: ${error.errorCode}',
                                     style: ThemeColor.bodyMedium.copyWith(color: Colors.white),
                                     textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis, // 👈
+                                    overflow: TextOverflow.ellipsis, 
                                     maxLines: 2,
                                   ),
                                 ),
@@ -190,8 +186,7 @@ class QRScannerWidget extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-
-          // Instrucción
+ 
           Text(
             _l.t('qr_scan_instruction'),
             style: ThemeColor.caption.copyWith(
@@ -199,13 +194,12 @@ class QRScannerWidget extends StatelessWidget {
               fontStyle: FontStyle.italic,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,              // 👈
+            maxLines: 2,             
             overflow: TextOverflow.ellipsis,
           ),
 
           const SizedBox(height: 20),
-
-          // Botones linterna y cámara
+ 
           Row(
             children: [
               Expanded(
@@ -221,7 +215,7 @@ class QRScannerWidget extends StatelessWidget {
                         _getTorchState(scannerController)
                             ? _l.t('qr_scan_torch_off')
                             : _l.t('qr_scan_torch_on'),
-                        overflow: TextOverflow.ellipsis, // 👈
+                        overflow: TextOverflow.ellipsis, 
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ThemeColor.primaryColor,
@@ -237,7 +231,7 @@ class QRScannerWidget extends StatelessWidget {
                   icon: const Icon(Icons.cameraswitch, color: Colors.white),
                   label: Text(
                     _l.t('qr_scan_switch_camera'),
-                    overflow: TextOverflow.ellipsis, // 👈
+                    overflow: TextOverflow.ellipsis, 
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeColor.primaryColor,
@@ -250,8 +244,7 @@ class QRScannerWidget extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-
-          // Cancelar
+ 
           TextButton(
             onPressed: scannerController.detenerEscaneoQR,
             child: Text(
@@ -260,7 +253,7 @@ class QRScannerWidget extends StatelessWidget {
                 color: ThemeColor.colorAccionButtons,
                 fontWeight: FontWeight.bold,
               ),
-              overflow: TextOverflow.ellipsis, // 👈
+              overflow: TextOverflow.ellipsis,  
             ),
           ),
         ],
