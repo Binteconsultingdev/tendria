@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
-
-/// Modelos de datos para la pantalla "Explorar". Muévelos a tus
-/// entity/model files si quieres mantener la separación de capas.
+ 
 class TrendingItem {
   final String imageUrl;
   final String? badge;
@@ -79,9 +77,9 @@ class PopularItem {
 }
 
 class ExploreVipController extends GetxController {
-  // --- Estado observable ---
+   
   final RxString searchQuery = ''.obs;
-  final RxInt currentNavIndex = 1.obs; // "Explorar" seleccionado
+  final RxInt currentNavIndex = 1.obs;  
 
   final TrendingItem featuredTrending = TrendingItem(
     imageUrl: 'https://picsum.photos/seed/opalo-vip/600/900',
@@ -163,20 +161,16 @@ class ExploreVipController extends GetxController {
       imageUrl: 'https://picsum.photos/seed/chef-secret/200/200',
     ),
   ].obs;
-
-  // --- Acciones ---
+ 
   void updateSearchQuery(String value) => searchQuery.value = value;
 
-  void openFilters() {
-    // TODO: abrir panel de filtros de búsqueda
+  void openFilters() { 
   }
 
-  void openTrendingAll() {
-    // TODO: navegar a la lista completa de tendencias
+  void openTrendingAll() { 
   }
 
-  void openLiveCreator(LiveCreatorPreview creator) {
-    // TODO: navegar a la transmisión en vivo
+  void openLiveCreator(LiveCreatorPreview creator) { 
   }
 
   void toggleBookmark(RecommendedItem item) {
@@ -187,12 +181,10 @@ class ExploreVipController extends GetxController {
     creator.isFollowing.value = !creator.isFollowing.value;
   }
 
-  void openSuggestedCreators() {
-    // TODO: navegar a la lista completa de creadores sugeridos
+  void openSuggestedCreators() { 
   }
 
-  void openPopularItem(PopularItem item) {
-    // TODO: navegar al contenido popular
+  void openPopularItem(PopularItem item) { 
   }
 
   void changeNavIndex(int index) {
