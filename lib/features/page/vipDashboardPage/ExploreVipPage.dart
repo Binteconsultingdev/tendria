@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tendria/common/theme/App_Theme.dart'; 
 import 'explore_vip_controller.dart';
-
-/// Imagen de red con estado de carga y error, usada en toda la pantalla.
+ 
 class _NetImage extends StatelessWidget {
   final String url;
   final BoxFit fit;
@@ -44,9 +43,7 @@ class _NetImage extends StatelessWidget {
     );
   }
 }
-
-/// Réplica de la pantalla "Explorar" VIP del PDF de referencia,
-/// construida únicamente con los colores/estilos de [ThemeColor].
+  
 class ExploreVipPage extends StatelessWidget {
   const ExploreVipPage({super.key});
 
@@ -112,16 +109,11 @@ class ExploreVipPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    //  bottomNavigationBar: _ExploreBottomNav(controller: controller),
+      ), 
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Top bar
-// ---------------------------------------------------------------------------
-
+ 
 class _ExploreTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -160,10 +152,7 @@ class _ExploreTopBar extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Search field
-// ---------------------------------------------------------------------------
+ 
 
 class _SearchField extends StatelessWidget {
   final ExploreVipController controller;
@@ -214,10 +203,7 @@ class _SearchField extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Generic section header
-// ---------------------------------------------------------------------------
+ 
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -277,10 +263,7 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Trending grid (1 destacado + 2 secundarios)
-// ---------------------------------------------------------------------------
+ 
 
 class _TrendingGrid extends StatelessWidget {
   final ExploreVipController controller;
@@ -450,10 +433,7 @@ class _SecondaryTrendingCard extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Live section
-// ---------------------------------------------------------------------------
+ 
 
 class _LiveSectionHeader extends StatelessWidget {
   @override
@@ -562,10 +542,7 @@ class _LiveCreatorsRow extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Recommended items
-// ---------------------------------------------------------------------------
+ 
 
 class _RecommendedCard extends StatelessWidget {
   final RecommendedItem item;
@@ -656,11 +633,7 @@ class _RecommendedCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// ---------------------------------------------------------------------------
-// New creators
-// ---------------------------------------------------------------------------
+} 
 
 class _NewCreatorsRow extends StatelessWidget {
   final ExploreVipController controller;
@@ -750,10 +723,7 @@ class _NewCreatorCard extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Popular items
-// ---------------------------------------------------------------------------
+ 
 
 class _PopularRow extends StatelessWidget {
   final PopularItem item;
@@ -823,10 +793,7 @@ class _PopularRow extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Bottom navigation with center "Publicar" FAB
-// ---------------------------------------------------------------------------
+ 
 
 class _ExploreBottomNav extends StatelessWidget {
   final ExploreVipController controller;
