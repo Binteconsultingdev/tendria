@@ -42,9 +42,7 @@ class StartControllerVip extends GetxController with WidgetsBindingObserver {
   ];
 
   final List<String> labels = ['Inicio', 'Explorar', 'Publicar', 'Balance', 'Perfil'];
-
-  /// Iconos del bottom nav VIP (antes eran rutas de imagen en
-  /// assets/icons/home/*.png, ahora son IconData nativos de Material).
+ 
   final List<IconData> icons = [
     Icons.home_filled,
     Icons.search,
