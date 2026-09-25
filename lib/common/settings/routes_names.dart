@@ -3,6 +3,7 @@ class RoutesNames {
   static const String homePage = '/homePage';
   static const String loginPage = '/login';
   static const String registerPage = '/register';
+  static const String forgotPasswordPage = '/forgot-password';
   static const String foryoupage = '/forYoupage';
   static const String nearbyProfilesPage = '/nearbyProfiles';
   static const String profileDetailPage = '/profileDetail';
@@ -29,4 +30,12 @@ class RoutesNames {
   static const String eliteAchievementsPage = '/elite-achievements-page';
   static const String achievementsCenterVipPage = '/achievements-center-vip-page';
   static const String sendGiftPage = '/send-gift-page';
+  static const String createPostPage = '/create-post-page';
+  static const String userPostsPage = '/user-posts-page';
+  static const String plansPage = '/plans-page';
+  static const String planDetailPage = '/plan-detail-page';
+  static const String createPlanPage = '/create-plan-page';
+  static const String communityDetailPage = '/community-detail-page';
+  static const String createCommunityPage = '/create-community-page';
+  static const String followListPage = '/follow-list-page';
 }

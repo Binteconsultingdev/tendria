@@ -1,3 +1,4 @@
+import 'package:tendria/features/chat/data/presence_repository.dart';
 import 'package:tendria/features/chat/domain/entities/usuario_chat_entity.dart';
 
 class UsuarioChatModel extends UsuarioChatEntity {
@@ -5,7 +6,8 @@ class UsuarioChatModel extends UsuarioChatEntity {
     required super.id,
     required super.nombre,
     super.fotoUrl,
-    super.isActive
+    super.isActive,
+    super.lastSeen,
   });
 
   factory UsuarioChatModel.fromJson(Map<String, dynamic> json) {
@@ -13,7 +15,8 @@ class UsuarioChatModel extends UsuarioChatEntity {
       id: json['id'],
       nombre: json['nombre'],
       fotoUrl: json['fotoUrl'],
-      isActive: json['estaActivo']
+      isActive: json['estaActivo'],
+      lastSeen: parseUtcDate(json['ultimaConexion']),
     );
   }
 }

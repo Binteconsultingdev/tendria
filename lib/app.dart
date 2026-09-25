@@ -1,3 +1,5 @@
+import 'package:tendria/features/follow/domain/usecase/follow_user_usecase.dart';
+import 'package:tendria/features/follow/domain/usecase/unfollow_user_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/controller/theme_controller.dart';
@@ -56,6 +58,8 @@ class App extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       debugShowCheckedModeBanner: false,
+      defaultTransition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 260),
      
         themeMode: themeCtrl.themeMode.value == AppThemeMode.light
         ? ThemeMode.light
@@ -110,6 +114,8 @@ class App extends StatelessWidget {
         Get.put(usecaseConfig.getLikeByUsersUsecase!, permanent: true);
         Get.put(usecaseConfig.getPendingLikedChatsUsecase!, permanent: true);
         Get.put(usecaseConfig.toggleLikeUsecase!, permanent: true);
+        Get.put(usecaseConfig.followUserUsecase!, permanent: true);
+        Get.put(usecaseConfig.unfollowUserUsecase!, permanent: true);
         Get.put(usecaseConfig.unlockChatUsecase!, permanent: true);
         Get.put(usecaseConfig.fetchBlockedUsersUsecase!, permanent: true);
         Get.put(usecaseConfig.blockUserUsecase!, permanent: true);
@@ -154,7 +160,7 @@ class App extends StatelessWidget {
             authService: Get.find(),startConversationsUsecase: Get.find(), paymentsChatUsecase: Get.find(),), fenix: true, );
         Get.lazyPut(  () => LikedByUsersController(getPendingLikedChatsUsecase: Get.find(), unlockChatUsecase: Get.find(), logMatchUsecase:  Get.find(), getLikeByUsersUsecase: Get.find(),),  fenix: true,);
         //    Get.lazyPut(() => StartConversationsController(startConversationsUsecase: Get.find(), paymentsChatUsecase: Get.find()), fenix:true);
-        Get.lazyPut(() => UserProfileController( getUserByIdUsecase: Get.find(), toggleLikeUsecase: Get.find(), blockUserUsecase: Get.find(), logViewProfileUsecase:  Get.find(), createReportsUserUsecase: Get.find(),),fenix: true,);
+        Get.lazyPut(() => UserProfileController( getUserByIdUsecase: Get.find(), toggleLikeUsecase: Get.find(), blockUserUsecase: Get.find(), logViewProfileUsecase:  Get.find(), createReportsUserUsecase: Get.find(), followUserUsecase: Get.find(), unfollowUserUsecase: Get.find(),),fenix: true,);
         Get.lazyPut(() => BlockedUsersController( fetchBlockedUsersUsecase: Get.find(), unblockUserUsecase: Get.find(), ),fenix: true,);
         Get.lazyPut(  () => UpdateProfileController( deleteInterestsUsecase: Get.find(),deleteQualitiesUsecase: Get.find(),  updateUserUsecase: Get.find(),  fetchInterestsUsecase: Get.find(),fetchQualitiesUsecase: Get.find(),  postInterestsUsecase: Get.find(),  postQualitiesUsecase: Get.find(), putPreferencesUserUsecase: Get.find(),  deleteUserUsecase: Get.find(),),fenix: true,);
         Get.lazyPut( () => NotificationController(getNotificationUsecase: Get.find(),markAllNotificationsAsReadUsecase: Get.find(),), fenix: true, );

@@ -21,7 +21,14 @@ class GetUserModel extends GetUserEntity {
     super.primarylanguage,
     super.heightcm,
     super.isTravelMode,
-    super.creationdate
+    super.creationdate,
+    super.coverUrl,
+    super.verified,
+    super.followers,
+    super.following,
+    super.publications,
+    super.iFollow,
+    super.followsMe,
   });
   factory GetUserModel.fromJson(Map<String, dynamic> json) {
     return GetUserModel(
@@ -38,6 +45,13 @@ class GetUserModel extends GetUserEntity {
       bio: json['bio'],
       isTravelMode: json['modo_viaje'] ,
       creationdate: json['fecha_creacion'],
+      coverUrl: json['portadaUrl'],
+      verified: json['verificado'],
+      followers: json['seguidores'],
+      following: json['siguiendo'],
+      publications: json['publicaciones'],
+      iFollow: json['yoSigo'],
+      followsMe: json['meSigue'],
       assets: (json['media'] as List<dynamic>?)
           ?.map(
             (e) => AssetEntity(

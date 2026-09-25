@@ -7,6 +7,6 @@ abstract class LikeRepository {
   Future<void> toggleLike(int userId, bool liked);
   Future<List<PendingChatEntity>> getPendingLikedChats();
   Future<void>unlockChat(int chatId);
-  Future<void> startConversations(PostChatEntity entity);
+  Future<int?> startConversations(PostChatEntity entity);
   Future<void> paymentsChat(int chatId);
 }

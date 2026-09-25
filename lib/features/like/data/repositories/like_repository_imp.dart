@@ -38,7 +38,7 @@ class LikeRepositoryImp  implements LikeRepository{
     return likeDataSourcesImp.paymentsChat(chatId, token);
   }
  @override
-  Future<void> startConversations(PostChatEntity entity) async {
+  Future<int?> startConversations(PostChatEntity entity) async {
     final token = await authService.getToken()?? (throw Exception('No hay sesión activa. El usuario debe iniciar sesión.'));
     
     return await likeDataSourcesImp.startConversations(entity, token);

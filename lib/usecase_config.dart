@@ -32,6 +32,10 @@ import 'package:tendria/features/chat/domain/usecase/send_message_usecase.dart';
 import 'package:tendria/features/chat/domain/usecase/setup_message_listener_usecase.dart';
 import 'package:tendria/features/like/domain/usecase/start_conversations_usecase.dart';
 import 'package:tendria/features/like/data/datasources/like_data_sources_imp.dart';
+import 'package:tendria/features/follow/data/datasources/follow_data_sources_imp.dart';
+import 'package:tendria/features/follow/data/repositories/follow_repository_imp.dart';
+import 'package:tendria/features/follow/domain/usecase/follow_user_usecase.dart';
+import 'package:tendria/features/follow/domain/usecase/unfollow_user_usecase.dart';
 import 'package:tendria/features/like/data/repositories/like_repository_imp.dart';
 import 'package:tendria/features/like/domain/usecase/get_like_by_users_usecase.dart';
 import 'package:tendria/features/like/domain/usecase/get_pending_liked_chats_usecase.dart';
@@ -92,6 +96,7 @@ class UsecaseConfig {
   StoriesDataSourcesImp? storiesDataSourcesImp;
   ChatDataSourcesImp?chatDataSourcesImp;
   LikeDataSourcesImp? likeDataSourcesImp;
+  FollowDataSourcesImp? followDataSourcesImp;
   UnlockDatasourcesImp? unlockDataSourcesImp;
   PurchaseDataSourcesImp? purchaseDataSourcesImp;
   FacebookDatasourcesImp? facebookDatasourcesImp;
@@ -105,6 +110,7 @@ class UsecaseConfig {
   StoriesRepositoryImp? storiesRepositoryImp;
   ChatRepositoryImp?chatRepositoryImp;
   LikeRepositoryImp? likeRepositoryImp;
+  FollowRepositoryImp? followRepositoryImp;
   UnlockRepositoryImp? unlockRepositoryImp;
   PurchaseRepositoryImp? purchaseRepositoryImp;
    NotificationRepositoryImp? notificationRepositoryImp;
@@ -165,6 +171,8 @@ class UsecaseConfig {
    GetLikeByUsersUsecase? getLikeByUsersUsecase;
    GetPendingLikedChatsUsecase? getPendingLikedChatsUsecase;
    ToggleLikeUsecase? toggleLikeUsecase;
+   FollowUserUsecase? followUserUsecase;
+   UnfollowUserUsecase? unfollowUserUsecase;
 
 
    UnblockUserUsecase? unblockUserUsecase;
@@ -198,6 +206,7 @@ class UsecaseConfig {
     storiesDataSourcesImp = StoriesDataSourcesImp();
     chatDataSourcesImp = ChatDataSourcesImp();
     likeDataSourcesImp = LikeDataSourcesImp();
+    followDataSourcesImp = FollowDataSourcesImp();
     unlockDataSourcesImp = UnlockDatasourcesImp();
     notificationDataSourcesImp = NotificationDataSourcesImp();
     purchaseDataSourcesImp = PurchaseDataSourcesImp();
@@ -210,6 +219,7 @@ class UsecaseConfig {
     storiesRepositoryImp = StoriesRepositoryImp(storiesDataSourcesImp: storiesDataSourcesImp!);
     chatRepositoryImp = ChatRepositoryImp(chatDataSourcesImp: chatDataSourcesImp!,);
     likeRepositoryImp = LikeRepositoryImp(likeDataSourcesImp: likeDataSourcesImp!);
+    followRepositoryImp = FollowRepositoryImp(followDataSourcesImp: followDataSourcesImp!);
     unlockRepositoryImp = UnlockRepositoryImp(unlockDatasourcesImp: unlockDataSourcesImp!);
     purchaseRepositoryImp = PurchaseRepositoryImp(purchaseDataSourcesImp: purchaseDataSourcesImp!);
     facebookRepositoryImp = FacebookRepositoryImpl(facebookDatasourcesImp: facebookDatasourcesImp!);
@@ -263,6 +273,8 @@ class UsecaseConfig {
     getLikeByUsersUsecase = GetLikeByUsersUsecase(likeRepository: likeRepositoryImp!);
     getPendingLikedChatsUsecase = GetPendingLikedChatsUsecase(likeRepository: likeRepositoryImp!);
     toggleLikeUsecase = ToggleLikeUsecase(likeRepository: likeRepositoryImp!);
+    followUserUsecase = FollowUserUsecase(followRepository: followRepositoryImp!);
+    unfollowUserUsecase = UnfollowUserUsecase(followRepository: followRepositoryImp!);
     marcarMensajesLeidosUsecase = MarcarMensajesLeidosUsecase(chatRepository: chatRepositoryImp!);
     onMensajesLeidosUsecase = OnMensajesLeidosUsecase(chatRepository: chatRepositoryImp!);
 

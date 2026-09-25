@@ -1,3 +1,6 @@
+import 'package:tendria/features/profile_social/presentation/widget/profile_social_section.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:tendria/common/settings/language_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -137,6 +140,7 @@ class UserProfileDetailPage extends StatelessWidget {
                           const SizedBox(height: 16),
                           _buildBioSection(controller),
                           const SizedBox(height: 16),
+                          _buildGiftsSection(controller),
                           _buildBuscoSection(controller),
                           const SizedBox(height: 16),
                           if (controller.userQualities.isNotEmpty)
@@ -285,6 +289,104 @@ class UserProfileDetailPage extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                const SizedBox(height: 6),
+                                Obx(() => Wrap(
+                                      spacing: 10,
+                                      runSpacing: 6,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        Text(
+                                          '${controller.followersCount.value} ${Get.find<LanguageController>().t('followers')}  ·  ${controller.followingCount.value} ${Get.find<LanguageController>().t('following')}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: controller.toggleFollow,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: controller.iFollow.value
+                                                  ? Colors.transparent
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              controller.iFollow.value
+                                                  ? Get.find<LanguageController>().t('following_btn')
+                                                  : Get.find<LanguageController>().t('follow_btn'),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: controller.iFollow.value
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () => Get.toNamed(
+                                            RoutesNames.userPostsPage,
+                                            arguments: {'userId': controller.userId.value},
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: Colors.white),
+                                            ),
+                                            child: Text(
+                                              Get.find<LanguageController>().t('feed_user_posts'),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () => controller.sendGift(Get.context!),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: Colors.white),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(LucideIcons.gift, size: 13, color: Colors.white),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  Get.find<LanguageController>().t('gift_pill'),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
@@ -415,6 +517,24 @@ class UserProfileDetailPage extends StatelessWidget {
     );
   }
  
+  /// Publicaciones, planes, comunidades y regalos recibidos de esta persona.
+  Widget _buildGiftsSection(UserProfileController controller) {
+    return Obx(() {
+      final version = controller.giftsVersion.value;
+      final id = controller.userId.value;
+      if (id == 0) return const SizedBox.shrink();
+
+      return ProfileSocialSection(
+        key: ValueKey('social_${id}_$version'),
+        userId: id,
+        isOwn: false,
+        followers: controller.followersCount.value,
+        following: controller.followingCount.value,
+        posts: controller.currentUser.value?.publications ?? 0,
+      );
+    });
+  }
+
   Widget _buildBioSection(UserProfileController controller) {
     return Obx(
       () => Container(

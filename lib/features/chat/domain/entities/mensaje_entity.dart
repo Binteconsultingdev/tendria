@@ -8,6 +8,8 @@ class MensajeEntity {
   final DateTime enviadoEn;
   final bool esPropio;
 final DateTime? leidoEn;
+  final String? giftCode; // presente si el mensaje es un regalo
+  final String? giftName;
   MensajeEntity({
     required this.id,
     required this.chatId,
@@ -18,5 +20,7 @@ final DateTime? leidoEn;
     required this.enviadoEn,
     required this.esPropio,
     this.leidoEn,
+    this.giftCode,
+    this.giftName,
   });
 }

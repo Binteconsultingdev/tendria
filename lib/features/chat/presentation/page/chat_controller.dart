@@ -1,4 +1,7 @@
+import 'package:tendria/features/chat/data/presence_repository.dart';
+import 'dart:async';
  
+import 'package:tendria/features/gift/presentation/widget/gift_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/errors/convert_message.dart';
@@ -77,10 +80,41 @@ class ChatController extends GetxController {
       _setupSignalR();
       loadChatMessages().then((_) => _marcarComoLeidos());
     }
+    _startPresence();
+  }
+
+  // ── Presencia: si la otra persona tiene la app abierta ahora ──
+  final RxBool presenceOnline = false.obs;
+  final Rxn<DateTime> presenceLastSeen = Rxn<DateTime>();
+  Timer? _presenceTimer;
+
+  int get _otherUserId => otroUsuario.value?.id ?? targetUserId;
+
+  void _syncPresenceFromUser() {
+    final u = otroUsuario.value;
+    if (u == null) return;
+    presenceOnline.value = u.isActive ?? false;
+    if (u.lastSeen != null) presenceLastSeen.value = u.lastSeen;
+  }
+
+  void _startPresence() {
+    _refreshPresence();
+    _presenceTimer = Timer.periodic(const Duration(seconds: 20), (_) => _refreshPresence());
+  }
+
+  Future<void> _refreshPresence() async {
+    final id = _otherUserId;
+    if (id == 0) return;
+    try {
+      final p = await PresenceRepository.instance.get(id);
+      presenceOnline.value = p.online;
+      presenceLastSeen.value = p.lastSeen ?? presenceLastSeen.value;
+    } catch (_) {}
   }
 
   @override
   void onClose() {
+    _presenceTimer?.cancel();
     messageController.removeListener(_onMessageChanged);
     messageController.dispose();
     scrollController.dispose();
@@ -169,6 +203,8 @@ class ChatController extends GetxController {
           enviadoEn: m.enviadoEn,
           esPropio: m.esPropio,
           leidoEn: leidoEn,
+          giftCode: m.giftCode,
+          giftName: m.giftName,
         );
       }
       return m;
@@ -189,6 +225,8 @@ class ChatController extends GetxController {
         mensaje: mensaje.mensaje,
         enviadoEn: mensaje.enviadoEn,
         esPropio: mensaje.esPropio,
+        giftCode: mensaje.giftCode,
+        giftName: mensaje.giftName,
       ),
     ];
     if (mensaje.esPropio || _isNearBottom()) {
@@ -222,9 +260,12 @@ class ChatController extends GetxController {
                 enviadoEn: m.enviadoEn,
                 esPropio: m.esPropio,
                 leidoEn: m.leidoEn,
+                giftCode: m.giftCode,
+                giftName: m.giftName,
               ))
           .toList();
       otroUsuario.value = result.otroUsuario;
+      _syncPresenceFromUser();
       Future.delayed(const Duration(milliseconds: 300), scrollToBottom);
     } catch (e) {
       hasError.value = true;
@@ -235,6 +276,29 @@ class ChatController extends GetxController {
   }
 
   Future<void> refreshChat() => loadChatMessages();
+
+  /// Abre la hoja de regalos. Si la conversación aún no existe, el regalo la crea.
+  Future<void> sendGift(BuildContext context) async {
+    final toId = otroUsuario.value?.id ?? targetUserId;
+    if (toId == 0) return;
+
+    final result = await showGiftSheet(
+      context,
+      toUserId: toId,
+      toName: otroUsuario.value?.nombre ?? userName ?? '',
+      origin: 'chat',
+    );
+    if (result == null) return;
+
+    if (isNewConversation.value && result.chatId != null) {
+      chatId = result.chatId;
+      isNewConversation.value = false;
+      _setupSignalR();
+      await loadChatMessages();
+    } else if (result.message != null) {
+      _handleIncomingMessage(result.message!);
+    }
+  }
  
 
   void _onMessageChanged() {
@@ -264,36 +328,28 @@ class ChatController extends GetxController {
       messageController.clear();
 
       final postEntity = PostChatEntity(chatId: targetUserId, menssage: message);
-      await startConversationsUsecase.execute(postEntity);
-
-      _addLocalMessage(message);
-      firstMessageSent.value = true;
+      final newChatId = await startConversationsUsecase.execute(postEntity);
       isTyping.value = false;
 
-      if (Get.isRegistered<BalanceController>()) {
-        await Get.find<BalanceController>().fetchBalance();
-      }
       if (Get.isRegistered<NearbyUsersController>()) {
         Get.find<NearbyUsersController>().loadNearbyUsers();
       }
 
-      showSuccessSnackbar('Mensaje enviado. Espera la respuesta.');
+      if (newChatId != null && newChatId > 0) {
+        // El chat es libre: pasa a conversación normal y se puede seguir escribiendo.
+        chatId = newChatId;
+        isNewConversation.value = false;
+        _setupSignalR();
+        await loadChatMessages();
+      } else {
+        _addLocalMessage(message);
+        firstMessageSent.value = true;
+        showSuccessSnackbar('Mensaje enviado.');
+      }
       Future.delayed(const Duration(milliseconds: 100), scrollToBottom);
     } catch (e) {
-      messageController.text = message; 
-    showCustomAlert(
-  context: Get.context!,
-  title: 'Saldo insuficiente',
-  message: 'No tienes suficiente saldo para realizar esta acción. ${cleanExceptionMessage(e)}',
-  confirmText: 'Recargar saldo',
-  cancelText: 'Cancelar',
-  type: CustomAlertType.error,
-  onConfirm: () {
-    Navigator.of(Get.context!).pop();
-    Get.offAllNamed(RoutesNames.purchasePage);
-  },
-  onCancel: () => Navigator.of(Get.context!).pop(),
-);
+      messageController.text = message;
+      showErrorSnackbar(cleanExceptionMessage(e));
     } finally {
       isSending.value = false;
     }

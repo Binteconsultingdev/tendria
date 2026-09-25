@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:tendria/common/constants/constants.dart';
 import 'package:tendria/features/auth/data/model/loginResponse/login_response_model.dart';
 import 'package:tendria/features/auth/domain/entities/response/login_response_entity.dart';
@@ -76,6 +77,29 @@ Future<bool> saveLoginResponse(LoginResponseEntity loginResponse) async {
   }
 }
 
+
+  /// Pide un token nuevo al backend (sesión deslizante). Si falla, se conserva el actual.
+  Future<void> renewToken() async {
+    try {
+      final current = await getUserData();
+      if (current == null || current.token.isEmpty) return;
+
+      final response = await http.post(
+        Uri.parse('${AppConstants.serverBase}/Auth/renovar'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${current.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        await saveLoginResponse(LoginResponseModel.fromJson(data));
+      }
+    } catch (e) {
+      print('⚠️ No se pudo renovar la sesión: $e');
+    }
+  }
 
   Future<bool> isLoggedIn() async {
     final userData = await getUserData();

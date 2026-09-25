@@ -33,7 +33,7 @@ class PreferencesPage extends GetView<PreferencesController> {
 
               if (controller.showSuccessScreen.value) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Get.offAllNamed(RoutesNames.homePage, arguments: {'tab': 1});
+                  Get.offAllNamed(RoutesNames.homePage, arguments: {'tab': 4});
                 });
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
@@ -42,7 +42,7 @@ class PreferencesPage extends GetView<PreferencesController> {
 
               if (controller.availableSteps.isEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Get.offAllNamed(RoutesNames.homePage, arguments: {'tab': 1});
+                  Get.offAllNamed(RoutesNames.homePage, arguments: {'tab': 4});
                 });
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),

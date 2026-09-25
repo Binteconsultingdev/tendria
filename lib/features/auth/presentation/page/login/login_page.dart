@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/settings/language_controller.dart';
+import 'package:tendria/common/settings/routes_names.dart';
 import 'package:tendria/common/theme/App_Theme.dart';
 import 'package:tendria/features/auth/presentation/page/login/login_controller.dart';
 
@@ -130,7 +131,32 @@ class LoginPage extends GetView<LoginController> {
             ),
           ),
 
-          SizedBox(height: ThemeColor.paddingMedium),
+          SizedBox(height: ThemeColor.paddingSmall),
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () async {
+                final email = await Get.toNamed(RoutesNames.forgotPasswordPage, arguments: {'email': controller.emailController.text.trim()});
+                if (email is String) {
+                  controller.emailController.text = email;
+                  controller.passwordController.clear();
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  lang.t('login_forgot'),
+                  style: ThemeColor.bodyMedium.copyWith(
+                    color: ThemeColor.primaryColor,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: ThemeColor.primaryColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: ThemeColor.paddingSmall),
           _buildRememberMeCheckbox(),
           SizedBox(height: ThemeColor.paddingExtraLarge),
           _buildLoginButton(),

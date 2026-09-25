@@ -187,7 +187,7 @@ Future<void> toggleLike(int userId, bool liked, String token) async {
       throw Exception('$e');
     }
   }
-  Future<void> startConversations(PostChatEntity entity, String token) async {
+  Future<int?> startConversations(PostChatEntity entity, String token) async {
     try {
       Uri url = Uri.parse('$defaultApiServer/Likes/iniciar-chat');
 
@@ -201,7 +201,12 @@ Future<void> toggleLike(int userId, bool liked, String token) async {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return;
+        try {
+          final data = jsonDecode(utf8.decode(response.bodyBytes));
+          return data['chatId'] as int?;
+        } catch (_) {
+          return null;
+        }
       }
 
       ApiExceptionCustom exception = ApiExceptionCustom(response: response);

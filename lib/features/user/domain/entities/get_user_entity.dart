@@ -18,6 +18,13 @@ class GetUserEntity {
   final LikeStatusEntity? likeStatus;
   final bool? isTravelMode;
   final String? creationdate;
+  final String? coverUrl;
+  final bool? verified;
+  final int? followers;
+  final int? following;
+  final int? publications;
+  final bool? iFollow;
+  final bool? followsMe;
   
   final String? status;
   final ChatEntity? chat;
@@ -40,7 +47,14 @@ class GetUserEntity {
       this.status,
       this.chat,
       this.isTravelMode,
-      this.creationdate
+      this.creationdate,
+      this.coverUrl,
+      this.verified,
+      this.followers,
+      this.following,
+      this.publications,
+      this.iFollow,
+      this.followsMe,
   });
 
 }

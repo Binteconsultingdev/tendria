@@ -1,3 +1,4 @@
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geocoding/geocoding.dart';
@@ -6,6 +7,7 @@ import 'package:tendria/common/constants/constants.dart';
 import 'package:tendria/common/tutorial/tutorialPerfil/profile_tutorial_controller.dart';
 import 'package:tendria/common/tutorial/tutorial_controller.dart';
 import 'package:tendria/common/settings/routes_names.dart';
+import 'package:tendria/features/feed/presentation/page/feed_page.dart';
 import 'package:tendria/features/like/presentation/page/liked_by_users_page.dart';
 import 'package:tendria/features/like/presentation/page/my_match_page.dart';
 import 'package:tendria/features/user/domain/entities/update_location_entity.dart';
@@ -29,15 +31,17 @@ class StartController extends GetxController with WidgetsBindingObserver {
     RadarScannerScreen(),
     LikedByUsersView(),
     MyMatchView(),
+    const FeedPage(),
   ];
 
-  final List<String> labels = ['Perfil', 'Radar', 'Match', 'Chat'];
+  final List<String> labels = ['Perfil', 'Radar', 'Match', 'Chat', 'Feed'];
 
   final List<String> iconPaths = [
     'assets/icons/home/perfil.png',
     'assets/icons/home/parati.png',
     'assets/icons/home/heart.png',
     'assets/icons/home/mensaje.png',
+    'assets/icons/home/home.png',
   ];
 
   final List<String> selectedIconPaths = [
@@ -45,9 +49,33 @@ class StartController extends GetxController with WidgetsBindingObserver {
     'assets/icons/home/parati.png',
     'assets/icons/home/heart.png',
     'assets/icons/home/mensaje.png',
+    'assets/icons/home/home.png',
   ];
 
-  final RxInt selectedIndex = 0.obs;
+  /// Índices internos de `pages` en el orden visible de la barra: Feed, Match, Chat, Perfil.
+  /// El Radar no está en la barra: se abre desde el Feed (índice interno 1).
+  /// Se conservan los índices internos para que 'tab', 'goHomeIndex', etc. sigan funcionando.
+  static const List<int> navOrder = [4, 2, 3, 0];
+
+  List<String> get navLabels => navOrder.map((i) => labels[i]).toList();
+  List<String> get navIcons => navOrder.map((i) => iconPaths[i]).toList();
+
+  /// Iconos de la barra (la pestaña activa se distingue por color y peso de la etiqueta).
+  List<IconData> get navIconData => const [
+    LucideIcons.house,
+    LucideIcons.heart,
+    LucideIcons.messageCircleMore,
+    LucideIcons.circleUser,
+  ];
+
+  /// Posición resaltada en la barra (-1 si estamos en una pestaña que no está en ella, como el Radar).
+  int get navSelected => navOrder.indexOf(selectedIndex.value);
+
+  void onNavTap(int position) => changePage(navOrder[position]);
+
+  void openRadar() => changePage(1);
+
+  final RxInt selectedIndex = 4.obs; // el Feed es la pantalla de inicio
   final RxBool isCheckingProfile = true.obs;
  
 @override

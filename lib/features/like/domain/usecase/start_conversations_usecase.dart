@@ -7,7 +7,7 @@ class StartConversationsUsecase {
 
   StartConversationsUsecase({required this.likeRepository});
 
-  Future<void> execute(PostChatEntity entity) async {
+  Future<int?> execute(PostChatEntity entity) async {
     return await likeRepository.startConversations(entity);
   
 }}

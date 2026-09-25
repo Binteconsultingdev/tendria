@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:tendria/common/settings/routes_names.dart';
 import 'package:tendria/features/chat/domain/usecase/get_my_chats_usecase.dart';
@@ -18,10 +19,20 @@ class MyMatchController extends GetxController {
   final RxBool filterPendingOnly = false.obs;
 bool _hasLoadedOnce = false;  
 final RxBool isSilentLoading = false.obs;
+  Timer? _presenceTimer;
+
   @override
   void onInit() {
     super.onInit();
     loadChats();
+    // El indicador "en línea" se actualiza solo cada 20 s
+    _presenceTimer = Timer.periodic(const Duration(seconds: 20), (_) => loadChats(silent: true));
+  }
+
+  @override
+  void onClose() {
+    _presenceTimer?.cancel();
+    super.onClose();
   }
  
 

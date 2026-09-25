@@ -1,3 +1,4 @@
+import 'package:tendria/features/gift/presentation/widget/gift_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/errors/convert_message.dart';
@@ -16,6 +17,8 @@ import 'package:tendria/features/user/domain/entities/get_user_entity.dart';
 import 'package:tendria/features/user/domain/usecase/create_reports_user_usecase.dart';
 import 'package:tendria/features/user/domain/usecase/get_user_by_id_usecase.dart';
 import 'package:tendria/features/like/domain/usecase/toggle_like_usecase.dart';
+import 'package:tendria/features/follow/domain/usecase/follow_user_usecase.dart';
+import 'package:tendria/features/follow/domain/usecase/unfollow_user_usecase.dart';
 import 'package:tendria/features/unlock/domain/usecase/block_user_usecase.dart';
 import 'package:tendria/features/user/presentation/controller/nearby_users_controller.dart';
 import 'package:tendria/features/user/presentation/controller/profile_controller.dart';
@@ -26,6 +29,8 @@ class UserProfileController extends GetxController {
   final BlockUserUsecase blockUserUsecase;
   final LogViewProfileUsecase logViewProfileUsecase;
   final CreateReportsUserUsecase createReportsUserUsecase;
+  final FollowUserUsecase followUserUsecase;
+  final UnfollowUserUsecase unfollowUserUsecase;
 
   UserProfileController({
     required this.getUserByIdUsecase,
@@ -33,6 +38,8 @@ class UserProfileController extends GetxController {
     required this.blockUserUsecase,
     required this.logViewProfileUsecase,
     required this.createReportsUserUsecase,
+    required this.followUserUsecase,
+    required this.unfollowUserUsecase,
   });
 
   final RxBool isLoading = false.obs;
@@ -40,6 +47,11 @@ class UserProfileController extends GetxController {
   final RxInt currentImageIndex = 0.obs;
   final RxBool isProcessingLike = false.obs;
   final RxBool isProcessingBlock = false.obs;
+  final RxBool isProcessingFollow = false.obs;
+  final RxInt giftsVersion = 0.obs; // se incrementa al enviar un regalo para refrescar la franja de recibidos
+  final RxBool iFollow = false.obs;
+  final RxInt followersCount = 0.obs;
+  final RxInt followingCount = 0.obs;
   final RxBool hasStories = false.obs;
   final descError = false.obs;
   LanguageController get _l => Get.find<LanguageController>();
@@ -101,6 +113,9 @@ class UserProfileController extends GetxController {
       final user = await getUserByIdUsecase.execute(idUser);
       print('User profile loaded: ${user.name}, id: ${user.id}');
       currentUser.value = user;
+      iFollow.value = user.iFollow ?? false;
+      followersCount.value = user.followers ?? 0;
+      followingCount.value = user.following ?? 0;
       currentImageIndex.value = 0;
       if (pageController.hasClients) {
         pageController.jumpToPage(0);
@@ -167,6 +182,36 @@ class UserProfileController extends GetxController {
       showErrorSnackbar('Error al procesar: ${cleanExceptionMessage(e)}');
     } finally {
       isProcessingLike.value = false;
+    }
+  }
+
+  Future<void> sendGift(BuildContext context) async {
+    if (userId.value == 0) return;
+    final result = await showGiftSheet(
+      context,
+      toUserId: userId.value,
+      toName: userName,
+      origin: 'perfil',
+    );
+    if (result != null) giftsVersion.value++;
+  }
+
+  Future<void> toggleFollow() async {
+    if (isProcessingFollow.value || userId.value == 0) return;
+
+    try {
+      isProcessingFollow.value = true;
+      final status = iFollow.value
+          ? await unfollowUserUsecase.execute(userId.value)
+          : await followUserUsecase.execute(userId.value);
+
+      iFollow.value = status.iFollow;
+      followersCount.value = status.followers;
+      followingCount.value = status.following;
+    } catch (e) {
+      showErrorSnackbar(cleanExceptionMessage(e));
+    } finally {
+      isProcessingFollow.value = false;
     }
   }
 

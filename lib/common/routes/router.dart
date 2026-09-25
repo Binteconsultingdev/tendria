@@ -1,4 +1,10 @@
+import 'package:tendria/features/profile_social/presentation/page/follow_list_page.dart';
+import 'package:tendria/features/communities/presentation/page/create_community_page.dart';
+import 'package:tendria/features/communities/presentation/page/community_detail_page.dart';
 
+import 'package:tendria/features/plans/presentation/page/create_plan_page.dart';
+import 'package:tendria/features/plans/presentation/page/plan_detail_page.dart';
+import 'package:tendria/features/plans/presentation/page/plans_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -6,8 +12,11 @@ import 'package:tendria/common/settings/routes_names.dart';
 import 'package:tendria/features/auth/presentation/page/Splash/splash_page.dart';
 import 'package:tendria/features/auth/presentation/page/home/start_page.dart';
 import 'package:tendria/features/auth/presentation/page/login/login_page.dart';
+import 'package:tendria/features/auth/presentation/page/login/forgot_password_page.dart';
 import 'package:tendria/features/auth/presentation/page/register/register_page.dart';
 import 'package:tendria/features/chat/presentation/page/chat_page.dart'; 
+import 'package:tendria/features/feed/presentation/page/create_post_page.dart';
+import 'package:tendria/features/feed/presentation/page/feed_page.dart';
 import 'package:tendria/features/notification/presentation/page/notificasiones/notification_page.dart';
 import 'package:tendria/features/page/achievementsCenterVip/achievements_center_vip.dart';
 import 'package:tendria/features/page/chatPremium/chat_premium.dart';
@@ -41,6 +50,7 @@ class AppPages {
         GetPage(name: RoutesNames.foryoupage, page: () => ForYouPage()),
         GetPage(name: RoutesNames.loginPage, page: () => LoginPage()),
         GetPage(name: RoutesNames.registerPage, page: () => RegisterPage()),
+        GetPage(name: RoutesNames.forgotPasswordPage, page: () => const ForgotPasswordPage()),
         GetPage(name: RoutesNames.homePage, page: () => StartPage()),
         GetPage(name: RoutesNames.nearbyProfilesPage, page: () => NearbyUsersPage()),
         GetPage(name: RoutesNames.profileDetailPage, page: () => NearbyUsersPage()),
@@ -62,6 +72,14 @@ class AppPages {
         GetPage(name: RoutesNames.eliteAchievementsPage, page: () => EliteAchievements()),
         GetPage(name: RoutesNames.achievementsCenterVipPage, page: () => AchievementsCenterVip()),
         GetPage(name: RoutesNames.sendGiftPage, page: () => SendGiftPage()),
+        GetPage(name: RoutesNames.createPostPage, page: () => const CreatePostPage()),
+        GetPage(name: RoutesNames.userPostsPage, page: () => const UserPostsPage()),
+        GetPage(name: RoutesNames.plansPage, page: () => const PlansPage()),
+        GetPage(name: RoutesNames.planDetailPage, page: () => const PlanDetailPage()),
+        GetPage(name: RoutesNames.createPlanPage, page: () => const CreatePlanPage()),
+        GetPage(name: RoutesNames.communityDetailPage, page: () => const CommunityDetailPage()),
+        GetPage(name: RoutesNames.createCommunityPage, page: () => const CreateCommunityPage()),
+        GetPage(name: RoutesNames.followListPage, page: () => const FollowListPage()),
   ];
 
   static final unknownRoute = GetPage(

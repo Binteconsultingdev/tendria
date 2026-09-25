@@ -23,6 +23,10 @@ class StartTutorialController extends GetxController {
   final RxInt  currentStep    = 0.obs;
   final RxBool isAnimatingOut = false.obs;
 
+  /// Las GlobalKey solo se enlazan a la interfaz mientras el tutorial siga pendiente.
+  /// Si dos pantallas de inicio coinciden (p. ej. al navegar con Get.offAllNamed) y comparten llaves, Flutter falla.
+  final RxBool pending = true.obs;
+
   final GlobalKey navProfileKey  = GlobalKey();
   final GlobalKey navRadarKey    = GlobalKey();
   final GlobalKey navMatchKey    = GlobalKey();
@@ -36,17 +40,15 @@ class StartTutorialController extends GetxController {
 @override
 void onInit() {
   super.onInit();
+  SharedPreferences.getInstance().then((prefs) {
+    pending.value = !(prefs.getBool(_prefKey) ?? false);
+  });
   final l = Get.find<LanguageController>();
   steps = [
     StartTutorialStep(
-      message: l.t('tutorial_start_profile'),
-      targetKey: navProfileKey,
-      anchor: TutorialAnchor.top,
-    ),
-    StartTutorialStep(
       message: l.t('tutorial_start_radar'),
-      targetKey: navRadarKey,
-      anchor: TutorialAnchor.top,
+      targetKey: navRadarKey, // botón de radar en la barra superior del Feed
+      anchor: TutorialAnchor.bottom,
     ),
     StartTutorialStep(
       message: l.t('tutorial_start_match'),
@@ -56,6 +58,11 @@ void onInit() {
     StartTutorialStep(
       message: l.t('tutorial_start_chat'),
       targetKey: navChatKey,
+      anchor: TutorialAnchor.top,
+    ),
+    StartTutorialStep(
+      message: l.t('tutorial_start_profile'),
+      targetKey: navProfileKey,
       anchor: TutorialAnchor.top,
     ),
     StartTutorialStep(
@@ -110,6 +117,7 @@ void onInit() {
   await prefs.setBool(_prefKey, true);
   
    completed.value = true;
+   pending.value = false;
 }
 
 final RxBool completed = false.obs;

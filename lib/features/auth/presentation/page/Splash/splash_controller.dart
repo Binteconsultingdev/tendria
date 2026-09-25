@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart'; 
+import 'package:tendria/common/services/auth_service.dart';
 import 'package:tendria/common/settings/routes_names.dart';
 import 'package:tendria/common/widgets/alert/snackbar_helper.dart';
 import 'package:tendria/features/user/domain/entities/update_location_entity.dart';
@@ -115,6 +116,7 @@ String _resolveCity(Placemark place) {
   Future<void> checkUserSession() async {
     try {
       await getUserUsecase.execute();
+      AuthService().renewToken(); // sesión deslizante, sin esperar
       Get.offAllNamed(RoutesNames.preferencesPage);
     } catch (e) {
       Get.offAllNamed(RoutesNames.loginPage);

@@ -36,20 +36,22 @@ class _StartPageState extends State<StartPage> {
       children: [
         Obx(() => ThemeColor.createMainScaffold(
           body: controller.currentPage,
-          currentIndex: controller.selectedIndex.value,
-          onNavigationTap: controller.changePage,
-          iconPaths: controller.iconPaths,
-          labels: controller.labels,
+          currentIndex: controller.navSelected,
+          onNavigationTap: controller.onNavTap,
+          icons: controller.navIconData,
+          labels: controller.navLabels,
           backgroundColor: ThemeColor.backgroundColorfondo,
           bottomNavBackgroundColor: Colors.white, 
-          navKeys: [
-            tutorialCtrl.navProfileKey,
-            tutorialCtrl.navRadarKey,
-            tutorialCtrl.navMatchKey,
-            tutorialCtrl.navChatKey,
-          ],
+          navKeys: tutorialCtrl.pending.value
+              ? [
+                  null, // Feed
+                  tutorialCtrl.navMatchKey,
+                  tutorialCtrl.navChatKey,
+                  tutorialCtrl.navProfileKey,
+                ]
+              : null,
           floatingActionButton: KeyedSubtree(
-            key: tutorialCtrl.panicButtonKey,
+            key: tutorialCtrl.pending.value ? tutorialCtrl.panicButtonKey : null,
             child: const PanicButton(),
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

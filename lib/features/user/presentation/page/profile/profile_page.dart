@@ -1,3 +1,8 @@
+import 'package:tendria/common/theme/elite.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:tendria/features/profile_social/presentation/widget/profile_social_section.dart';
+import 'package:tendria/common/services/auth_service.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -69,16 +74,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       children: [
                         _buildHeader(),
-                        SizedBox(height: ThemeColor.paddingLarge),
-                        SizedBox(height: ThemeColor.paddingLarge),
+                        const SizedBox(height: 14),
+                        _buildSocialSection(),
+                        const SizedBox(height: 14),
                         _buildPhotosSection(),
-                        SizedBox(height: ThemeColor.paddingLarge),
+                        const SizedBox(height: 14),
                         _buildBiographySection(),
-                        SizedBox(height: ThemeColor.paddingLarge),
+                        const SizedBox(height: 14),
                         InterestsSectionWidget(isEditable: true),
-                        SizedBox(height: ThemeColor.paddingLarge),
+                        const SizedBox(height: 14),
                         QualitiesSectionWidget(isEditable: true),
-                        SizedBox(height: ThemeColor.paddingExtraLarge),
+                        const SizedBox(height: 90),
                       ],
                     ),
                   ),
@@ -97,297 +103,252 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.all(ThemeColor.paddingLarge),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 204,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Flexible(
-                child: Text(
-                  _l.t('profile'),
-                  style: ThemeColor.headingLarge.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: ThemeColor.textPrimary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              // Portada con degradado de marca
+              Container(
+                height: 140,
+                margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  gradient: ThemeColor.primaryGradient,
+                  borderRadius: BorderRadius.circular(Elite.rXl),
+                  boxShadow: Elite.softShadow,
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(top: -50, right: -30, child: _bubble(150, 0.09)),
+                    Positioned(bottom: -70, left: -20, child: _bubble(130, 0.07)),
+                  ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        key: tutorialCtrl.blockedUsersKey,
-                        icon: Icon(
-                          Icons.person_off,
-                          color: ThemeColor.iconColor,
-                        ),
-                        onPressed: controller.onViewBlockedUsers,
-                      ),
-                      IconButton(
-                        key: tutorialCtrl.notificationsKey,
-                        icon: Icon(
-                          Icons.notifications_none,
-                          color: ThemeColor.iconColor,
-                        ),
-                        onPressed: controller.onViewNotifications,
-                      ),
-                      IconButton(
-                        key: tutorialCtrl.editProfileKey,
-                        icon: Icon(Icons.edit, color: ThemeColor.iconColor),
-                        onPressed: controller.onHelpTap,
-                      ),
-                      IconButton(
-                        key: tutorialCtrl.settingsKey,
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: ThemeColor.iconColor,
-                        ),
-                        onPressed: controller.onSettingsTap,
-                      ),
+              // Título y accesos
+              Positioned(
+                top: 20,
+                left: 32,
+                right: 22,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(_l.t('profile'),
+                          style: GoogleFonts.rubik(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    _barButton(tutorialCtrl.blockedUsersKey, LucideIcons.userX, controller.onViewBlockedUsers),
+                    _barButton(tutorialCtrl.notificationsKey, LucideIcons.bell, controller.onViewNotifications),
+                    _barButton(tutorialCtrl.editProfileKey, LucideIcons.pencil, controller.onHelpTap),
+                    _barButton(tutorialCtrl.settingsKey, LucideIcons.settings, controller.onSettingsTap),
+                    Obx(() {
+                      final isDark = _themeCtrl.themeMode.value != AppThemeMode.light;
+                      return _barButton(null, isDark ? LucideIcons.moon : LucideIcons.sun, _themeCtrl.toggleTheme);
+                    }),
+                  ],
+                ),
+              ),
+              // Foto con anillo de historia, montada sobre la portada
+              Positioned(
+                left: 24,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(color: ThemeColor.backgroundColorfondo, shape: BoxShape.circle),
+                  child: MyStoryRingWidget(size: 84),
+                ),
+              ),
+              // Contadores, junto a la foto
+              Positioned(
+                left: 128,
+                right: 16,
+                bottom: 0,
+                height: 52,
+                child: FutureBuilder<int?>(
+                  future: AuthService().getUserId(),
+                  builder: (_, snapshot) {
+                    final id = snapshot.data;
+                    if (id == null) return const SizedBox.shrink();
+                    return Obx(() {
+                      final u = controller.userEntity.value;
+                      return ProfileStatsRow(
+                        userId: id,
+                        posts: u?.publications ?? 0,
+                        followers: u?.followers ?? 0,
+                        following: u?.following ?? 0,
+                      );
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+          child: Obx(() {
+            final user = controller.userEntity.value;
+            final status = user?.status ?? '';
+            final verified = user?.verified ?? false;
+            final city = controller.city;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text('${controller.userName}, ${controller.userAge}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: Elite.title(size: 24)),
+                    ),
+                    if (verified) ...[
+                      const SizedBox(width: 7),
+                      const Icon(LucideIcons.badgeCheck, size: 22, color: Elite.gold),
                     ],
-                  ),
-                  Obx(() {
-                    final isDark =
-                        _themeCtrl.themeMode.value != AppThemeMode.light;
-                    return GestureDetector(
-                      onTap: _themeCtrl.toggleTheme,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        width: 72,
-                        height: 34,
-                        padding: const EdgeInsets.all(4),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Ciudad y estado en una misma línea
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (city.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.mapPin, size: 14, color: ThemeColor.textSecondary),
+                          const SizedBox(width: 5),
+                          Text(city, style: Elite.caption(size: 13.5)),
+                        ],
+                      ),
+                    GestureDetector(
+                      key: tutorialCtrl.statusKey,
+                      onTap: () => _updater.showEditStatus(status),
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 250),
+                        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                         decoration: BoxDecoration(
-                          color: ThemeColor.toggleBackground,
-                          borderRadius: BorderRadius.circular(20),
+                          color: status.isNotEmpty ? ThemeColor.colorstatus.withValues(alpha: 0.10) : ThemeColor.subtleBackground,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: status.isNotEmpty ? ThemeColor.colorstatus.withValues(alpha: 0.28) : ThemeColor.subtleBorder),
                         ),
-                        child: Stack(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 2),
-                                child: Icon(
-                                  Icons.wb_sunny_rounded,
-                                  size: 16,
-                                  color: ThemeColor.toggleThumb,
-                                ),
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 2),
-                                child: Icon(
-                                  Icons.dark_mode_rounded,
-                                  size: 16,
-                                  color: ThemeColor.toggleThumb,
-                                ),
-                              ),
-                            ),
-                            AnimatedAlign(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              alignment: isDark
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: ThemeColor.toggleThumb,
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [ThemeColor.lightShadow],
-                                ),
-                              ),
+                            Icon(status.isNotEmpty ? LucideIcons.messageCircle : LucideIcons.plus,
+                                size: 13, color: status.isNotEmpty ? ThemeColor.colorstatus : ThemeColor.textSecondary),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(status.isNotEmpty ? status : _l.t('add_status'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Elite.body(size: 12.5, color: status.isNotEmpty ? ThemeColor.colorstatus : ThemeColor.textSecondary)),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  }),
-                ],
-              ),
-            ],
-          ),
-
-          SizedBox(height: ThemeColor.paddingLarge),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                children: [
-                  MyStoryRingWidget(size: 80),
-                  SizedBox(height: ThemeColor.paddingSmall),
-                ],
-              ),
-
-              SizedBox(width: ThemeColor.paddingLarge),
-
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(top: ThemeColor.paddingSmall),
-                  child: Obx(() {
-                    final status = controller.userEntity.value?.status ?? '';
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (status.isNotEmpty)
-                          GestureDetector(
-                            key: tutorialCtrl.statusKey,
-                            onTap: () => _updater.showEditStatus(status),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ThemeColor.colorstatus.withOpacity(0.12),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                  bottomRight: Radius.circular(12),
-                                  bottomLeft: Radius.circular(4),
-                                ),
-                                border: Border.all(
-                                  color: ThemeColor.colorstatus.withOpacity(
-                                    0.3,
-                                  ),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      status,
-                                      style: ThemeColor.bodySmall.copyWith(
-                                        color: ThemeColor.colorstatus,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.edit,
-                                    size: 12,
-                                    color: ThemeColor.colorstatus.withOpacity(
-                                      0.6,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                        if (status.isEmpty)
-                          GestureDetector(
-                            onTap: () => _updater.showEditStatus(''),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ThemeColor.subtleBackground,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                  bottomRight: Radius.circular(12),
-                                  bottomLeft: Radius.circular(4),
-                                ),
-                                border: Border.all(
-                                  color: ThemeColor.subtleBorder,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.add,
-                                    size: 13,
-                                    color: ThemeColor.textSecondary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _l.t('add_status'),
-                                    style: ThemeColor.bodySmall.copyWith(
-                                      color: ThemeColor.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                        Text(
-                          '${controller.userName}, ${controller.userAge}',
-                          style: ThemeColor.headingMedium.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: ThemeColor.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                        ),
-
-                        InkWell(
-                          key: tutorialCtrl.creditsKey,
-                          onTap: () {
-                            Get.offAllNamed(RoutesNames.purchasePage);
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.bolt_rounded,
-                                color: Colors.amber,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  '${_balanceController.currentBalance} créditos',
-                                  style: ThemeColor.headingMedium.copyWith(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: ThemeColor.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.add_circle_outline,
-                                color: ThemeColor.primaryColor,
-                                size: 18,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
+                    ),
+                  ],
                 ),
+              ],
+            );
+          }),
+        ),
+        const SizedBox(height: 12),
+        // Créditos: franja delgada de una línea
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: InkWell(
+            key: tutorialCtrl.creditsKey,
+            borderRadius: BorderRadius.circular(Elite.rMd),
+            onTap: () => Get.offAllNamed(RoutesNames.purchasePage),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFFFF6DC), Color(0xFFF6E7BB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(Elite.rMd),
+                border: Border.all(color: Elite.gold.withValues(alpha: 0.45)),
               ),
-            ],
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFE8C766), Color(0xFFC9A24B)]), shape: BoxShape.circle),
+                    child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Obx(() => Text('${_balanceController.currentBalance.toStringAsFixed(0)}  ${_l.t('gift_credits')}',
+                        style: GoogleFonts.rubik(fontSize: 17, fontWeight: FontWeight.w700, color: const Color(0xFF3E3210)))),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(color: const Color(0xFF3E3210), borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.plus, size: 14, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(_l.t('gift_recharge_short'), style: GoogleFonts.rubik(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _bubble(double size, double opacity) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: opacity)),
+      );
+
+  Widget _barButton(Key? key, IconData icon, VoidCallback onTap) => Padding(
+        padding: const EdgeInsets.only(left: 7),
+        child: GestureDetector(
+          key: key,
+          onTap: onTap,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), shape: BoxShape.circle),
+            child: Icon(icon, size: 18, color: Colors.white),
+          ),
+        ),
+      );
+
+  /// Seguidores, seguidos, publicaciones, planes, comunidades y regalos recibidos.
+  Widget _buildSocialSection() {
+    return FutureBuilder<int?>(
+      future: AuthService().getUserId(),
+      builder: (_, snapshot) {
+        final id = snapshot.data;
+        if (id == null) return const SizedBox.shrink();
+
+        return Obx(() {
+          final u = controller.userEntity.value;
+          return ProfileSocialSection(
+            key: ValueKey('social_own_$id'),
+            userId: id,
+            isOwn: true,
+            followers: u?.followers ?? 0,
+            following: u?.following ?? 0,
+            posts: u?.publications ?? 0,
+            showCounters: false,
+          );
+        });
+      },
     );
   }
 
@@ -397,8 +358,8 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: EdgeInsets.all(ThemeColor.paddingLarge),
       decoration: BoxDecoration(
         color: ThemeColor.cardBackground,
-        borderRadius: ThemeColor.largeBorderRadius,
-        boxShadow: [ThemeColor.cardShadow],
+        borderRadius: BorderRadius.circular(Elite.rLg),
+        boxShadow: Elite.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,11 +445,10 @@ class _ProfilePageState extends State<ProfilePage> {
           Container(
             decoration: BoxDecoration(
               color: ThemeColor.cardBackground,
-              borderRadius: ThemeColor.mediumBorderRadius,
-              border: Border.all(color: ThemeColor.dividerColor, width: 1),
+              borderRadius: BorderRadius.circular(Elite.rMd),
             ),
             child: ClipRRect(
-              borderRadius: ThemeColor.mediumBorderRadius,
+              borderRadius: BorderRadius.circular(Elite.rMd),
               child: CachedNetworkImage(
                 imageUrl: asset.url,
                 fit: BoxFit.cover,
@@ -553,9 +513,9 @@ class _ProfilePageState extends State<ProfilePage> {
         onTap: isUploading ? null : controller.addPhoto,
         child: Container(
           decoration: BoxDecoration(
-            color: ThemeColor.cardBackground,
-            borderRadius: ThemeColor.mediumBorderRadius,
-            border: Border.all(color: ThemeColor.dividerColor, width: 1),
+            color: ThemeColor.primaryColor.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(Elite.rMd),
+            border: Border.all(color: ThemeColor.primaryColor.withValues(alpha: 0.25), width: 1.4),
           ),
           child: isUploading
               ? Center(
@@ -570,7 +530,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 )
-              : Icon(Icons.add, color: ThemeColor.textSecondary, size: 32),
+              : Icon(LucideIcons.plus, color: ThemeColor.primaryColor, size: 28),
         ),
       );
     });
@@ -589,8 +549,8 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: EdgeInsets.all(ThemeColor.paddingLarge),
           decoration: BoxDecoration(
             color: ThemeColor.cardBackground,
-            borderRadius: ThemeColor.largeBorderRadius,
-            boxShadow: [ThemeColor.cardShadow],
+            borderRadius: BorderRadius.circular(Elite.rLg),
+            boxShadow: Elite.softShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

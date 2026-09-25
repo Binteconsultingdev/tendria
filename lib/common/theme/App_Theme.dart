@@ -892,60 +892,51 @@ class ThemeColor {
     return Container(
       decoration: BoxDecoration(
         color: ThemeColor.cardBackground,
+        border: Border(top: BorderSide(color: ThemeColor.textSecondary.withValues(alpha: 0.12))),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 0,
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, -6)),
         ],
       ),
       child: SafeArea(
+        top: false,
         child: SizedBox(
-          height: 70,
+          height: 68,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(itemCount, (index) {
-              final isSelected = currentIndex == index;
-              final iconColor = isSelected
-                  ? ThemeColor.textPrimary
-                  : ThemeColor.textSecondary;
+              final selected = currentIndex == index;
+              final color = selected ? ThemeColor.primaryColor : ThemeColor.textSecondary;
 
-              return KeyedSubtree(
-                key: navKeys != null && index < navKeys.length
-                    ? navKeys[index]
-                    : null,
-                child: GestureDetector(
-                  onTap: () => onTap(index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 16,
-                    ),
+              return Expanded(
+                child: KeyedSubtree(
+                  key: navKeys != null && index < navKeys.length ? navKeys[index] : null,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onTap(index);
+                    },
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        icons != null
-                            ? Icon(icons[index], size: 26, color: iconColor)
-                            : Image.asset(
-                                iconPaths![index],
-                                width: 26,
-                                height: 26,
-                                fit: BoxFit.contain,
-                                color: iconColor,
-                              ),
+                        // La pestaña activa se marca con una "píldora" suave detrás del icono
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          padding: EdgeInsets.symmetric(horizontal: selected ? 22 : 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: selected ? ThemeColor.primaryColor.withValues(alpha: 0.12) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: icons != null
+                              ? Icon(icons[index], size: 24, color: color)
+                              : Image.asset(iconPaths![index], width: 24, height: 24, fit: BoxFit.contain, color: color),
+                        ),
                         if (labels != null && index < labels.length) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            labels[index],
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              color: iconColor,
-                            ),
+                          const SizedBox(height: 3),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: color),
+                            child: Text(labels[index]),
                           ),
                         ],
                       ],
@@ -959,6 +950,7 @@ class ThemeColor {
       ),
     );
   }
+
   static Widget widgetLogo({double width = 100, double height = 100}) {
     try {
       final ctrl = Get.find<ThemeController>();

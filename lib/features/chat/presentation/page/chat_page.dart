@@ -1,3 +1,8 @@
+﻿import 'package:tendria/features/feed/presentation/widget/time_ago.dart';
+import 'package:tendria/features/feed/presentation/widget/feed_style.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:tendria/features/gift/presentation/widget/gift_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/settings/language_controller.dart';
@@ -67,9 +72,12 @@ class ChatPage extends GetView<ChatController> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: ThemeColor.cardBackground,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      titleSpacing: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: ThemeColor.iconColor),
+        icon: Icon(LucideIcons.arrowLeft, color: ThemeColor.textPrimary),
         onPressed: () {
           FocusScope.of(Get.context!).unfocus();
           if (controller.goHomeIndex.value >= 0) {
@@ -86,6 +94,16 @@ class ChatPage extends GetView<ChatController> {
       ),
       title: Obx(() {
         final usuario = controller.otroUsuario.value;
+        final online = controller.presenceOnline.value;
+        final lastSeen = controller.presenceLastSeen.value;
+        final photo = usuario?.fotoUrl?.isNotEmpty == true ? usuario!.fotoUrl! : controller.userPhoto;
+
+        String status = '';
+        if (online) {
+          status = _l.t('chat_online');
+        } else if (lastSeen != null) {
+          status = '${_l.t('chat_last_seen')} ${timeAgo(lastSeen)}';
+        }
 
         return InkWell(
           onTap: () {
@@ -96,38 +114,21 @@ class ChatPage extends GetView<ChatController> {
             children: [
               Stack(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: ThemeColor.storyGradient,
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: ThemeColor.cardBackground,
-                          width: 1.5,
+                  UserAvatar(url: photo, radius: 20),
+                  if (online)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 13,
+                        height: 13,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: ThemeColor.cardBackground, width: 2),
                         ),
                       ),
-                      child: ClipOval(
-                        child: (usuario?.fotoUrl != null &&
-                                    usuario!.fotoUrl!.isNotEmpty) ||
-                                controller.userPhoto != null
-                            ? Image.network(
-                                usuario?.fotoUrl?.isNotEmpty == true
-                                    ? usuario!.fotoUrl!
-                                    : controller.userPhoto!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    _buildDefaultAvatar(),
-                              )
-                            : _buildDefaultAvatar(),
-                      ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(width: 12),
@@ -136,15 +137,22 @@ class ChatPage extends GetView<ChatController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      usuario?.nombre ??
-                          controller.userName ??
-                          _l.t('user'),
-                      style: ThemeColor.subtitleLarge.copyWith(
-                        color: ThemeColor.textPrimary,
-                      ),
+                      usuario?.nombre ?? controller.userName ?? _l.t('user'),
+                      style: GoogleFonts.rubik(fontSize: 16.5, fontWeight: FontWeight.w600, color: ThemeColor.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (status.isNotEmpty)
+                      Text(
+                        status,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.rubik(
+                          fontSize: 12,
+                          fontWeight: online ? FontWeight.w600 : FontWeight.w400,
+                          color: online ? const Color(0xFF16A34A) : ThemeColor.textSecondary,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -152,6 +160,10 @@ class ChatPage extends GetView<ChatController> {
           ),
         );
       }),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(height: 1, thickness: 1, color: ThemeColor.textSecondary.withValues(alpha: 0.12)),
+      ),
     );
   }
 
@@ -264,18 +276,67 @@ class ChatPage extends GetView<ChatController> {
 
   Widget _buildDateSeparator(DateTime dt) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: ThemeColor.cardBackground.withOpacity(0.85),
-          borderRadius: ThemeColor.mediumBorderRadius,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Text(
+            controller.formatDateSeparator(dt),
+            style: GoogleFonts.rubik(fontSize: 11.5, fontWeight: FontWeight.w500, color: Colors.white),
+          ),
         ),
-        child: Text(
-          controller.formatDateSeparator(dt),
-          style: ThemeColor.caption.copyWith(
-            color: ThemeColor.textSecondary,
-            fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  /// Regalo: una tarjeta pequeña de una línea (icono, nombre y hora), no un bloque grande.
+  Widget _buildGiftBubble(MensajeEntity mensaje) {
+    final isOwn = mensaje.esPropio;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, top: 2),
+      child: Align(
+        alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 6, 14, 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                ThemeColor.primaryColor.withValues(alpha: 0.13),
+                ThemeColor.primaryColor.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: ThemeColor.primaryColor.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GiftIcon(code: mensaje.giftCode!, size: 40),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    mensaje.giftName ?? '',
+                    style: GoogleFonts.rubik(fontSize: 14, fontWeight: FontWeight.w700, color: ThemeColor.textPrimary),
+                  ),
+                  Text(
+                    isOwn ? _l.t('gift_you_sent') : _l.t('gift_sent_to_you'),
+                    style: GoogleFonts.rubik(fontSize: 11.5, color: ThemeColor.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              Text(
+                controller.formatMessageTime(mensaje.enviadoEn),
+                style: GoogleFonts.rubik(fontSize: 10.5, color: ThemeColor.textSecondary),
+              ),
+            ],
           ),
         ),
       ),
@@ -283,374 +344,171 @@ class ChatPage extends GetView<ChatController> {
   }
 
   Widget _buildMessageBubble(MensajeEntity mensaje) {
+    if (mensaje.giftCode != null) return _buildGiftBubble(mensaje);
+
     final isOwn = mensaje.esPropio;
+    final hasText = mensaje.mensaje != null && mensaje.mensaje!.isNotEmpty;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isOwn) ...[
-            _buildMessageAvatar(mensaje.senderFoto),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: Get.width * 0.7),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isOwn
-                    ? ThemeColor.primaryColor
-                    : ThemeColor.cardBackground,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(ThemeColor.mediumRadius),
-                  topRight: Radius.circular(ThemeColor.mediumRadius),
-                  bottomLeft: Radius.circular(
-                    isOwn ? ThemeColor.mediumRadius : 4,
-                  ),
-                  bottomRight: Radius.circular(
-                    isOwn ? 4 : ThemeColor.mediumRadius,
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Align(
+        alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: Get.width * 0.78),
+          padding: const EdgeInsets.fromLTRB(14, 9, 12, 7),
+          decoration: BoxDecoration(
+            gradient: isOwn ? ThemeColor.primaryGradient : null,
+            color: isOwn ? null : ThemeColor.cardBackground,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(20),
+              topRight: const Radius.circular(20),
+              bottomLeft: Radius.circular(isOwn ? 20 : 6),
+              bottomRight: Radius.circular(isOwn ? 6 : 20),
+            ),
+            boxShadow: isOwn
+                ? null
+                : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (hasText)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    mensaje.mensaje!,
+                    style: GoogleFonts.rubik(
+                      fontSize: 15,
+                      height: 1.35,
+                      color: isOwn ? Colors.white : ThemeColor.textPrimary,
+                    ),
                   ),
                 ),
-                boxShadow: [ThemeColor.lightShadow],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 3),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (mensaje.mensaje != null && mensaje.mensaje!.isNotEmpty)
-                    Text(
-                      mensaje.mensaje!,
-                      style: ThemeColor.bodyMedium.copyWith(
-                        color: isOwn
-                            ? ThemeColor.textLightColor
-                            : ThemeColor.textPrimary,
-                      ),
+                  Text(
+                    controller.formatMessageTime(mensaje.enviadoEn),
+                    style: GoogleFonts.rubik(
+                      fontSize: 10.5,
+                      color: isOwn ? Colors.white.withValues(alpha: 0.75) : ThemeColor.textSecondary,
                     ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          controller.formatMessageTime(mensaje.enviadoEn),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ThemeColor.caption.copyWith(
-                            color: isOwn
-                                ? ThemeColor.textLightColor.withOpacity(0.7)
-                                : ThemeColor.textSecondary,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                      if (isOwn) ...[
-                        const SizedBox(width: 4),
-                        _buildMessageStatus(mensaje.leidoEn),
-                      ],
-                    ],
                   ),
+                  if (isOwn) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      mensaje.leidoEn != null ? LucideIcons.checkCheck : LucideIcons.check,
+                      size: 14,
+                      color: mensaje.leidoEn != null ? const Color(0xFF8FD6FF) : Colors.white.withValues(alpha: 0.75),
+                    ),
+                  ],
                 ],
               ),
-            ),
+            ],
           ),
-          if (isOwn) ...[
-            const SizedBox(width: 8),
-            _buildMessageAvatar(
-                mensaje.senderFoto ?? controller.myPhoto),
-          ],
-        ],
+        ),
       ),
     );
   }
-
-  Widget _buildMessageStatus(DateTime? leidoEn) {
-    final isRead = leidoEn != null;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: Icon(
-        isRead ? Icons.done_all : Icons.done,
-        key: ValueKey(isRead),
-        size: 14,
-        color: isRead ? Colors.blue[200] : Colors.white54,
-      ),
-    );
-  }
-
-  Widget _buildMessageAvatar(String? photoUrl) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: ThemeColor.backgroundColorfondo,
-      ),
-      child: ClipOval(
-        child: photoUrl != null && photoUrl.isNotEmpty
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.person,
-                  size: 18,
-                  color: ThemeColor.textSecondary,
-                ),
-              )
-            : Icon(
-                Icons.person,
-                size: 18,
-                color: ThemeColor.textSecondary,
-              ),
-      ),
-    );
-  }
- 
 
   Widget _buildMessageInput() {
     return Obx(() {
       final isNew = controller.isNewConversation.value;
       final blocked = isNew && controller.firstMessageSent.value;
+      final canSend = !blocked && (isNew ? !controller.isSending.value : controller.isTyping.value && !controller.isSending.value);
 
       return Container(
         decoration: BoxDecoration(
           color: ThemeColor.cardBackground,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          border: Border(top: BorderSide(color: ThemeColor.textSecondary.withValues(alpha: 0.12))),
         ),
         child: SafeArea(
+          top: false,
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (controller.isNewConversation.value &&
-                    !controller.firstMessageSent.value)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ThemeColor.primaryColor.withOpacity(0.1),
-                      borderRadius: ThemeColor.smallBorderRadius,
-                      border: Border.all(
-                        color: ThemeColor.primaryColor.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 18,
-                          color: ThemeColor.primaryColor,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Obx(
-                            () => RichText(
-                              text: TextSpan(
-                                style: ThemeColor.caption.copyWith(
-                                  color: ThemeColor.primaryColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                children: [
-                                  TextSpan(text: _l.t('chat_cost_info')),
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Icon(
-                                      Icons.bolt_rounded,
-                                      color: Colors.amber,
-                                      size: 16,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        '${controller.balanceController.chatCost.toStringAsFixed(0)} ${_l.t('chat_credits')}. ',
-                                  ),
-                                  TextSpan(
-                                      text: _l.t('chat_balance_info')),
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Icon(
-                                      Icons.bolt_rounded,
-                                      color: Colors.amber,
-                                      size: 16,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        '${controller.balanceController.currentBalance.toStringAsFixed(0)}. ',
-                                  ),
-                                  TextSpan(
-                                      text: _l.t('chat_charge_info')),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                 if (blocked)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ThemeColor.primaryColor.withOpacity(0.1),
-                      borderRadius: ThemeColor.smallBorderRadius,
-                      border: Border.all(
-                        color: ThemeColor.primaryColor.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 18,
-                          color: ThemeColor.primaryColor,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _l.t('chat_first_msg_sent'),
-                            style: ThemeColor.caption.copyWith(
-                              color: ThemeColor.primaryColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      _l.t('chat_first_msg_sent'),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.rubik(fontSize: 12.5, color: ThemeColor.primaryColor, fontWeight: FontWeight.w500),
                     ),
                   ),
-
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Regalo: un solo botón discreto; la selección se abre en una hoja
+                    GestureDetector(
+                      onTap: blocked ? null : () => controller.sendGift(Get.context!),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: ThemeColor.primaryColor.withValues(alpha: blocked ? 0.04 : 0.10),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(LucideIcons.gift, size: 21, color: ThemeColor.primaryColor.withValues(alpha: blocked ? 0.4 : 1)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Opacity(
-                        opacity: blocked ? 0.5 : 1.0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: blocked
-                                ? ThemeColor.disabledColor
-                                : ThemeColor.backgroundColorfondo,
-                            borderRadius: ThemeColor.circularBorderRadius,
-                          ),
-                          child: TextField(
-                            controller: controller.messageController,
-                            enabled: !blocked,
-                            maxLines: null,
-                            textCapitalization:
-                                TextCapitalization.sentences,
-                            textInputAction: TextInputAction.done,
-                            style: ThemeColor.bodyMedium.copyWith(
-                              color: ThemeColor.textPrimary,
-                            ),
-                            onTap: blocked
-                                ? null
-                                : () {
-                                    Future.delayed(
-                                      const Duration(milliseconds: 400),
-                                      () {
-                                        if (controller
-                                            .scrollController
-                                            .hasClients) {
-                                          controller.scrollToBottom();
-                                        }
-                                      },
-                                    );
-                                  },
-                            decoration: InputDecoration(
-                              hintText: blocked
-                                  ? _l.t('chat_hint_blocked')
-                                  : _l.t('chat_hint'),
-                              hintStyle: ThemeColor.bodyMedium.copyWith(
-                                color: ThemeColor.textSecondary,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                            ),
-                            onSubmitted: blocked
-                                ? null
-                                : (_) {
-                                    FocusScope.of(Get.context!).unfocus();
-                                    controller.sendMessage();
-                                  },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: ThemeColor.backgroundColorfondo,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: TextField(
+                          controller: controller.messageController,
+                          enabled: !blocked,
+                          minLines: 1,
+                          maxLines: 5,
+                          textCapitalization: TextCapitalization.sentences,
+                          textInputAction: TextInputAction.newline,
+                          style: GoogleFonts.rubik(fontSize: 15, color: ThemeColor.textPrimary),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            hintText: blocked ? _l.t('chat_hint_blocked') : _l.t('chat_hint'),
+                            hintStyle: GoogleFonts.rubik(fontSize: 15, color: ThemeColor.textSecondary),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Obx(() {
-                      final canSend = !blocked &&
-                          (controller.isNewConversation.value
-                              ? !controller.isSending.value
-                              : controller.isTyping.value &&
-                                  !controller.isSending.value);
-
-                      return AnimatedContainer(
+                    GestureDetector(
+                      onTap: canSend
+                          ? () {
+                              FocusScope.of(Get.context!).unfocus();
+                              controller.sendMessage();
+                            }
+                          : null,
+                      child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: 48,
-                        height: 48,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: canSend
-                              ? ThemeColor.primaryColor
-                              : ThemeColor.disabledColor,
+                          gradient: canSend ? ThemeColor.primaryGradient : null,
+                          color: canSend ? null : ThemeColor.textSecondary.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
-                          boxShadow:
-                              canSend ? [ThemeColor.lightShadow] : [],
+                          boxShadow: canSend
+                              ? [BoxShadow(color: ThemeColor.primaryColor.withValues(alpha: 0.30), blurRadius: 10, offset: const Offset(0, 4))]
+                              : null,
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: canSend
-                                ? () {
-                                    FocusScope.of(Get.context!).unfocus();
-                                    controller.sendMessage();
-                                  }
-                                : null,
-                            borderRadius: BorderRadius.circular(100),
-                            child: Center(
-                              child: controller.isSending.value
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.send,
-                                      color: canSend
-                                          ? ThemeColor.textLightColor
-                                          : ThemeColor.textSecondary,
-                                      size: 22,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
+                        child: controller.isSending.value
+                            ? const Padding(
+                                padding: EdgeInsets.all(13),
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Icon(LucideIcons.arrowUp, size: 22, color: canSend ? Colors.white : ThemeColor.textSecondary),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -660,7 +518,7 @@ class ChatPage extends GetView<ChatController> {
       );
     });
   }
- 
+
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
