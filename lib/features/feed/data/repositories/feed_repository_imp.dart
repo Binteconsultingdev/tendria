@@ -27,8 +27,17 @@ class FeedRepositoryImp implements FeedRepository {
   Future<PostEntity> getPost(int postId) async => dataSource.getPost(await _token(), postId);
 
   @override
-  Future<PostEntity> createPost({String? text, List<File> files = const [], int? communityId}) async =>
-      dataSource.createPost(await _token(), text: text, files: files, communityId: communityId);
+  Future<PostEntity> createPost({
+    String? text,
+    List<File> files = const [],
+    int? communityId,
+    String? layout,
+    String? background,
+    String? feeling,
+    String? location,
+  }) async =>
+      dataSource.createPost(await _token(),
+          text: text, files: files, communityId: communityId, layout: layout, background: background, feeling: feeling, location: location);
 
   @override
   Future<CursorPage<PostEntity>> getCommunityPosts(int communityId, {int? cursor, int pageSize = 10}) async =>

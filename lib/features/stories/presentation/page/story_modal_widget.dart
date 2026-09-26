@@ -1,3 +1,4 @@
+import 'package:tendria/features/stories/presentation/widgets/story_reply_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tendria/common/services/auth_service.dart';
@@ -321,12 +322,9 @@ class _StoryModalWidgetState extends State<StoryModalWidget>
                       right: 16,
                       top: 16,
                     ),
-                    child: SizedBox(
-                      height: 50,
-                      child: isViewingMyStory
-                          ? _buildMyStoryFooter(currentStory)
-                          : _buildOtherStoryFooter(currentStory),
-                    ),
+                    child: isViewingMyStory
+                        ? SizedBox(height: 50, child: _buildMyStoryFooter(currentStory))
+                        : _buildOtherStoryFooter(currentStory),
                   ),
                 ),
 
@@ -558,30 +556,13 @@ class _StoryModalWidgetState extends State<StoryModalWidget>
   }
 
   Widget _buildOtherStoryFooter(StoryEntity story) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: GestureDetector(
-        onTap: () => controller.likeStory(),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            shape: BoxShape.circle,
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            transitionBuilder: (child, animation) {
-              return ScaleTransition(scale: animation, child: child);
-            },
-            child: Icon(
-              story.yaLikeada ? Icons.favorite : Icons.favorite_border,
-              key: ValueKey(story.yaLikeada),
-              color: story.yaLikeada ? Colors.red : Colors.white,
-              size: 26,
-            ),
-          ),
-        ),
-      ),
+    // Responder y reaccionar (la barra se reinicia con cada historia)
+    return StoryReplyBar(
+      key: ValueKey('reply_${story.id}'),
+      storyId: story.id,
+      initialReaction: story.yaLikeada ? 'me_encanta' : null,
+      onPause: controller.pauseStory,
+      onResume: controller.resumeStory,
     );
   }
 

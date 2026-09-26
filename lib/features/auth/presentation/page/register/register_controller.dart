@@ -1,3 +1,4 @@
+import 'package:tendria/features/auth/data/email_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
@@ -176,6 +177,7 @@ bool _containsNumericWord(String text) {
     customGenderFocusNode = FocusNode();
 
     emailController.addListener(_validateEmail);
+    emailFocusNode.addListener(_onEmailFocusChange);
     passwordController.addListener(_validatePassword);
     confirmPasswordController.addListener(_validateConfirmPassword);
     nameController.addListener(_validateName);
@@ -185,6 +187,7 @@ bool _containsNumericWord(String text) {
   @override
   void onClose() {
     emailController.removeListener(_validateEmail);
+    emailFocusNode.removeListener(_onEmailFocusChange);
     passwordController.removeListener(_validatePassword);
     confirmPasswordController.removeListener(_validateConfirmPassword);
     nameController.removeListener(_validateName);
@@ -330,8 +333,40 @@ bool _containsNumericWord(String text) {
 
   String getQualityLabel(String name) => translatedQualities[name] ?? name;
 
-  void nextStep() {
+  // ---- correo: se valida desde el principio (formato y que no esté ya registrado) ----
+  String? _checkedEmail;
+  bool _checkedEmailFree = true;
+
+  Future<bool> _ensureEmailFree() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty || emailError.value) return true; // el formato inválido ya se muestra por separado
+    if (_checkedEmail == email) {
+      if (!_checkedEmailFree) {
+        emailError.value = true;
+        emailErrorMessage.value = _l.t('val_email_taken');
+      }
+      return _checkedEmailFree;
+    }
+
+    final free = await isEmailAvailable(email);
+    _checkedEmail = email;
+    _checkedEmailFree = free;
+
+    // El usuario pudo seguir escribiendo mientras se consultaba
+    if (!free && emailController.text.trim() == email) {
+      emailError.value = true;
+      emailErrorMessage.value = _l.t('val_email_taken');
+    }
+    return free;
+  }
+
+  void _onEmailFocusChange() {
+    if (!emailFocusNode.hasFocus) _ensureEmailFree();
+  }
+
+  Future<void> nextStep() async {
     if (_validateCurrentStep()) {
+      if (currentStep.value == RegistrationStep.basicInfo && !await _ensureEmailFree()) return;
       if (currentStepIndex.value < 4) {
         currentStepIndex.value++;
         currentStep.value = RegistrationStep.values[currentStepIndex.value];

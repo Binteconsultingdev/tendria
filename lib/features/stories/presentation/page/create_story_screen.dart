@@ -1,3 +1,6 @@
+import 'package:tendria/features/stories/presentation/page/story_extras.dart';
+import 'package:tendria/features/feed/presentation/widget/post_style.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -13,6 +16,7 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
 
 class DraggableStoryText extends StatefulWidget {
+  final String style;
   final String text;
   final Color color;
   final Offset position;
@@ -25,6 +29,7 @@ class DraggableStoryText extends StatefulWidget {
 
   const DraggableStoryText({
     Key? key,
+    this.style = 'none',
     required this.text,
     required this.color,
     required this.position,
@@ -92,13 +97,13 @@ class _DraggableStoryTextState extends State<DraggableStoryText> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: widget.isSelected
-                ? Colors.white.withOpacity(0.2)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: widget.isSelected
-                ? Border.all(color: Colors.white, width: 2)
-                : null,
+            color: widget.style == 'pill'
+                ? Colors.black.withOpacity(0.6)
+                : (widget.isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent),
+            borderRadius: BorderRadius.circular(widget.style == 'none' ? 8 : 12),
+            border: widget.style == 'outline'
+                ? Border.all(color: widget.color, width: 2.5)
+                : (widget.isSelected ? Border.all(color: Colors.white, width: 2) : null),
           ),
           child: Transform.scale(
             scale: scale,
@@ -112,13 +117,21 @@ class _DraggableStoryTextState extends State<DraggableStoryText> {
                   color: widget.color,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.5),
-                      offset: const Offset(2, 2),
-                      blurRadius: 4,
-                    ),
-                  ],
+                  shadows: widget.style == 'neon'
+                      ? [
+                          Shadow(color: widget.color, blurRadius: 6),
+                          Shadow(color: widget.color, blurRadius: 16),
+                          Shadow(color: widget.color.withOpacity(0.8), blurRadius: 30),
+                        ]
+                      : (widget.style == 'outline'
+                          ? const <Shadow>[]
+                          : [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                offset: const Offset(2, 2),
+                                blurRadius: 4,
+                              ),
+                            ]),
                 ),
                 textAlign: TextAlign.center,
                 softWrap: true,
@@ -190,7 +203,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen>
         ),
       );
 
-      if (controller.storyTexts.isNotEmpty) {
+      if (controller.needsBaking) {
         finalFile = await controller.captureStoryWithTexts();
       } else {
         finalFile = await controller.convertToPng(finalFile!);
@@ -337,6 +350,25 @@ class _CreateStoryScreenState extends State<CreateStoryScreen>
           }),
 
           _buildHeader(),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 78,
+            right: 16,
+            child: GestureDetector(
+              onTap: controller.startTextStory,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.35), borderRadius: BorderRadius.circular(22)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.text_fields, color: Colors.white, size: 20),
+                    const SizedBox(width: 7),
+                    Text('Texto', style: GoogleFonts.rubik(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            ),
+          ),
           _buildGallery(),
           _buildCaptureButton(),
           _buildInstructionText(),
@@ -604,9 +636,25 @@ class _CreateStoryScreenState extends State<CreateStoryScreen>
                       return _buildImagePreview();
                     }),
                   ),
+                  Positioned.fill(
+                    child: Obx(() => CustomPaint(painter: StrokesPainter(controller.strokes.toList()))),
+                  ),
+                  ...controller.stickers.map((sticker) {
+                    return Obx(() => DraggableSticker(
+                          sticker: sticker,
+                          selected: controller.selectedStickerId.value == sticker.id,
+                          onMoved: (p) => controller.moveSticker(sticker.id, p),
+                          onScaled: (s) => controller.scaleSticker(sticker.id, s),
+                          onTap: () {
+                            controller.selectedStickerId.value = sticker.id;
+                            controller.selectText(null);
+                          },
+                        ));
+                  }),
                   ...controller.storyTexts.map((storyText) {
                     return Obx(() {
                       return DraggableStoryText(
+                        style: storyText.style,
                         text: storyText.text,
                         color: storyText.color,
                         position: storyText.position,
@@ -632,9 +680,23 @@ class _CreateStoryScreenState extends State<CreateStoryScreen>
               ),
             ),
 
+            // Modo dibujo: captura los dedos por encima de todo
+            Obx(() => controller.activeTool.value == 'draw'
+                ? Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onPanStart: (d) => controller.startStroke(_norm(d.localPosition)),
+                      onPanUpdate: (d) => controller.extendStroke(_norm(d.localPosition)),
+                      child: const SizedBox.expand(),
+                    ),
+                  )
+                : const SizedBox.shrink()),
+
             _buildPreviewHeader(),
 
             _buildAddTextButton(),
+
+            _buildToolBar(),
 
             Obx(
               () => controller.isEditingText.value
@@ -721,6 +783,8 @@ Widget _buildPreviewHeader() {
       child: Obx(() {
         return Column(
           children: [
+            // En fotos y historias de texto, el botón de texto está en la barra de herramientas
+            if (controller.contentType.value == CreateStoryController.kVideo)
             GestureDetector(
               onTap: () => controller.openTextEditor(),
               child: Container(
@@ -769,8 +833,239 @@ Widget _buildPreviewHeader() {
   Widget _buildImagePreview() {
     if (controller.capturedFile.value == null) return const SizedBox.shrink();
 
+    if (controller.isTextStory.value) {
+      final bg = PostBackground.of(controller.bgId.value) ?? PostBackground.all.first;
+      return Container(decoration: BoxDecoration(gradient: bg.gradient));
+    }
+
     return Center(
-      child: Image.file(controller.capturedFile.value!, fit: BoxFit.contain),
+      child: StoryFilters.apply(
+        controller.filterId.value,
+        Image.file(controller.capturedFile.value!, fit: BoxFit.contain),
+      ),
+    );
+  }
+
+  /// Punto táctil -> coordenadas relativas a la pantalla.
+  Offset _norm(Offset p) {
+    final size = MediaQuery.of(context).size;
+    return Offset((p.dx / size.width).clamp(0.0, 1.0), (p.dy / size.height).clamp(0.0, 1.0));
+  }
+
+  Widget _toolButton(IconData icon, VoidCallback onTap, {bool active = false, String? tooltip}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.black.withOpacity(0.45),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: active ? Colors.black : Colors.white, size: 23),
+        ),
+      ),
+    );
+  }
+
+  /// Herramientas a la derecha (texto, stickers, dibujo, filtros y fondo) y barra inferior de la herramienta activa.
+  Widget _buildToolBar() {
+    return Obx(() {
+      final tool = controller.activeTool.value;
+      final isPhoto = controller.contentType.value == CreateStoryController.kImagen;
+      final isText = controller.isTextStory.value;
+
+      return Stack(
+        children: [
+          if (isPhoto)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 76,
+              right: 16,
+              child: Column(
+                children: [
+                  _toolButton(Icons.text_fields, () => controller.openTextEditor()),
+                  _toolButton(LucideIcons.smile, () async {
+                    final kind = await showStickerSheet(context);
+                    if (kind == null) return;
+                    if (kind == 'location' || kind == 'tag') {
+                      final text = await _askText(kind == 'location' ? 'Ubicación' : 'Etiqueta');
+                      if (text == null || text.isEmpty) return;
+                      controller.addSticker(StorySticker(kind: kind, text: kind == 'tag' && !text.startsWith('#') ? '#$text' : text, position: const Offset(0.5, 0.35)));
+                    } else {
+                      controller.addSticker(StorySticker(kind: kind, position: const Offset(0.5, 0.4)));
+                    }
+                  }),
+                  _toolButton(LucideIcons.pencil, () => controller.toggleTool('draw'), active: tool == 'draw'),
+                  if (!isText) _toolButton(LucideIcons.wandSparkles, () => controller.toggleTool('filter'), active: tool == 'filter'),
+                  if (isText) _toolButton(LucideIcons.palette, () => controller.toggleTool('bg'), active: tool == 'bg'),
+                  if (controller.selectedStickerId.value != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () => controller.removeSticker(controller.selectedStickerId.value!),
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(color: Colors.red.withOpacity(0.85), shape: BoxShape.circle),
+                          child: const Icon(Icons.delete, color: Colors.white, size: 22),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          if (isPhoto && tool != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.75)]),
+                ),
+                child: tool == 'filter' ? _filterStrip() : (tool == 'bg' ? _bgStrip() : _drawBar()),
+              ),
+            ),
+        ],
+      );
+    });
+  }
+
+  Future<String?> _askText(String title) {
+    final input = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF16171B),
+        title: Text(title, style: GoogleFonts.rubik(color: Colors.white)),
+        content: TextField(
+          controller: input,
+          autofocus: true,
+          maxLength: 40,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(counterText: ''),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(input.text.trim()), child: const Text('Listo')),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterStrip() {
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: StoryFilters.all.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, i) {
+          final f = StoryFilters.all[i];
+          return Obx(() {
+            final selected = controller.filterId.value == f.id;
+            return GestureDetector(
+              onTap: () => controller.filterId.value = f.id,
+              child: Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: selected ? Colors.white : Colors.white24, width: selected ? 2.5 : 1),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: StoryFilters.apply(f.id, Image.file(controller.capturedFile.value!, fit: BoxFit.cover, cacheWidth: 160)),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(f.label, style: GoogleFonts.rubik(color: selected ? Colors.white : Colors.white60, fontSize: 11.5, fontWeight: selected ? FontWeight.w600 : FontWeight.w400)),
+                ],
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _bgStrip() {
+    return SizedBox(
+      height: 52,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (final bg in PostBackground.all)
+            Obx(() => GestureDetector(
+                  onTap: () => controller.bgId.value = bg.id,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(right: 10, top: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: bg.gradient,
+                      border: Border.all(color: controller.bgId.value == bg.id ? Colors.white : Colors.white24, width: controller.bgId.value == bg.id ? 3 : 1.2),
+                    ),
+                  ),
+                )),
+        ],
+      ),
+    );
+  }
+
+  static const List<Color> _brushColors = [
+    Colors.white, Colors.black, Color(0xFFFF3B55), Color(0xFFFF9A1F), Color(0xFFFFE14D), Color(0xFF3DDC97), Color(0xFF3AB0FF), Color(0xFFB86CFF), Color(0xFFFF8FB1),
+  ];
+
+  Widget _drawBar() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final c in _brushColors)
+                      Obx(() => GestureDetector(
+                            onTap: () => controller.brushColor.value = c,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 10, top: 4),
+                              decoration: BoxDecoration(
+                                color: c,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: controller.brushColor.value == c ? Colors.white : Colors.white38, width: controller.brushColor.value == c ? 3 : 1.2),
+                              ),
+                            ),
+                          )),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(onPressed: controller.undoStroke, icon: const Icon(LucideIcons.undo2, color: Colors.white)),
+            TextButton(onPressed: () => controller.activeTool.value = null, child: Text('Listo', style: GoogleFonts.rubik(color: Colors.white, fontWeight: FontWeight.w600))),
+          ],
+        ),
+        Obx(() => Slider(
+              value: controller.brushSize.value,
+              min: 3,
+              max: 26,
+              activeColor: Colors.white,
+              inactiveColor: Colors.white24,
+              onChanged: (v) => controller.brushSize.value = v,
+            )),
+      ],
     );
   }
 
@@ -995,7 +1290,9 @@ class _FullscreenTextEditorOverlayState
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
                             height: 1.3,
-                            shadows: style == 'outline'
+                            shadows: style == 'neon'
+                                ? [Shadow(color: color, blurRadius: 8), Shadow(color: color, blurRadius: 20)]
+                                : style == 'outline'
                                 ? []
                                 : [
                                     Shadow(
@@ -1037,6 +1334,7 @@ class _FullscreenTextEditorOverlayState
                           {'id': 'none', 'label': 'Sin fondo'},
                           {'id': 'pill', 'label': 'Con fondo'},
                           {'id': 'outline', 'label': 'Contorno'},
+                          {'id': 'neon', 'label': 'Neón'},
                         ].map((s) {
                           return Obx(() {
                             final isActive =

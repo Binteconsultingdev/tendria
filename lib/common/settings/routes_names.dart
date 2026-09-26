@@ -4,6 +4,7 @@ class RoutesNames {
   static const String loginPage = '/login';
   static const String registerPage = '/register';
   static const String forgotPasswordPage = '/forgot-password';
+  static const String moderationPage = '/moderation';
   static const String foryoupage = '/forYoupage';
   static const String nearbyProfilesPage = '/nearbyProfiles';
   static const String profileDetailPage = '/profileDetail';

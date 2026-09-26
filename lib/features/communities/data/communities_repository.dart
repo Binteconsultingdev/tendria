@@ -106,6 +106,31 @@ class CommunitiesRepository {
         return CommunityEntity.fromJson(_decode(await http.Response.fromStream(streamed)));
       });
 
+  Future<CommunityEntity> update(
+    int id, {
+    required String name,
+    String? description,
+    required String category,
+    required String privacy,
+    String? city,
+    File? image,
+    File? cover,
+  }) =>
+      _guard(() async {
+        final request = http.MultipartRequest('PUT', Uri.parse('$_base/Comunidades/$id'));
+        request.headers['Authorization'] = 'Bearer ${await _token()}';
+        request.fields['nombre'] = name;
+        request.fields['descripcion'] = (description ?? '').trim();
+        request.fields['categoria'] = category;
+        request.fields['privacidad'] = privacy;
+        request.fields['ciudad'] = (city ?? '').trim();
+        if (image != null) request.files.add(await http.MultipartFile.fromPath('imagen', image.path));
+        if (cover != null) request.files.add(await http.MultipartFile.fromPath('portada', cover.path));
+
+        final streamed = await request.send().timeout(const Duration(minutes: 2));
+        return CommunityEntity.fromJson(_decode(await http.Response.fromStream(streamed)));
+      });
+
   Future<CommunityEntity> join(int id) => _guard(() async {
         final r = await http.post(Uri.parse('$_base/Comunidades/$id/unirse'), headers: await _headers());
         return CommunityEntity.fromJson(_decode(r));

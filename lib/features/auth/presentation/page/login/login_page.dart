@@ -160,9 +160,33 @@ class LoginPage extends GetView<LoginController> {
           _buildRememberMeCheckbox(),
           SizedBox(height: ThemeColor.paddingExtraLarge),
           _buildLoginButton(),
+          _buildBiometricButton(),
         ],
       ),
     );
+  }
+
+  Widget _buildBiometricButton() {
+    return Obx(() {
+      if (!controller.biometricReady.value) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: controller.isLoading.value ? null : controller.onBiometricTap,
+            icon: const Icon(Icons.fingerprint, size: 24),
+            label: Text(lang.t('bio_button'), style: ThemeColor.buttonText.copyWith(fontSize: 15)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: ThemeColor.textLightColor,
+              side: BorderSide(color: ThemeColor.textLightColor.withValues(alpha: 0.7)),
+              shape: RoundedRectangleBorder(borderRadius: ThemeColor.circularBorderRadius),
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildRememberMeCheckbox() {

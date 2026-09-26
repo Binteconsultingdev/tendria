@@ -1,3 +1,4 @@
+import 'package:tendria/features/feed/presentation/widget/post_style.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -32,6 +33,12 @@ class CreatePostController extends GetxController {
   final RxList<PickedMedia> media = <PickedMedia>[].obs;
   final RxBool isPublishing = false.obs;
   final RxBool hasText = false.obs;
+
+  /// Personalización: disposición de fotos, fondo de texto, sentimiento y ubicación
+  final RxString layout = PostLayouts.carousel.obs;
+  final RxnString background = RxnString();
+  final RxnString feeling = RxnString();
+  final RxString location = ''.obs;
 
   LanguageController get _l => Get.find<LanguageController>();
 
@@ -115,6 +122,10 @@ class CreatePostController extends GetxController {
         text: textController.text,
         files: media.map((m) => m.file).toList(),
         communityId: communityId,
+        layout: media.length >= 2 ? layout.value : null,
+        background: media.isEmpty ? background.value : null,
+        feeling: feeling.value,
+        location: location.value,
       );
       Get.back(result: post);
     } catch (e) {

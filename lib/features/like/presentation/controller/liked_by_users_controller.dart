@@ -25,7 +25,8 @@ class LikedByUsersController extends GetxController {
     required this.getLikeByUsersUsecase,
   });
  
-  final RxInt activeTab = 0.obs;
+  /// 2 = Descubrir, 1 = Les gusté
+  final RxInt activeTab = 2.obs;
 
   final RxList<PendingChatEntity> pendingChats = <PendingChatEntity>[].obs;
   final RxList<LikedByUsersEntity> likedByUsers = <LikedByUsersEntity>[].obs;
@@ -40,7 +41,6 @@ class LikedByUsersController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadPendingChats();
     loadLikedByUsers();
   }
 

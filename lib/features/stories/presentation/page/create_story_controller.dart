@@ -1,3 +1,5 @@
+import 'package:tendria/features/stories/presentation/page/story_extras.dart';
+import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -79,6 +81,25 @@ class CreateStoryController extends GetxController {
   final Rx<String?> selectedTextId = Rx<String?>(null);
 
   final GlobalKey repaintBoundaryKey = GlobalKey();
+
+  // ---- personalización ----
+  /// Historia solo de texto: fondo de color en lugar de una foto
+  final RxBool isTextStory = false.obs;
+  final RxString bgId = 'sunset'.obs;
+  final RxString filterId = 'none'.obs;
+  final RxList<StorySticker> stickers = <StorySticker>[].obs;
+  final Rxn<String> selectedStickerId = Rxn<String>();
+  final RxList<StoryStroke> strokes = <StoryStroke>[].obs;
+  final Rx<Color> brushColor = Colors.white.obs;
+  final RxDouble brushSize = 7.0.obs;
+
+  /// Herramienta abierta: filter | draw | bg | null
+  final RxnString activeTool = RxnString();
+
+  /// ¿Hay algo que "hornear" en la imagen final? (textos, stickers, dibujo, filtro o fondo de color)
+  bool get needsBaking =>
+      storyTexts.isNotEmpty ||
+      (_isImagen && (isTextStory.value || stickers.isNotEmpty || strokes.isNotEmpty || filterId.value != 'none'));
   final RxBool isProcessingVideo = false.obs;
  
   final RxBool isEditingText = false.obs;
@@ -97,6 +118,64 @@ class CreateStoryController extends GetxController {
 
   bool get _isVideo  => contentType.value == kVideo;
   bool get _isImagen => contentType.value == kImagen;
+
+  // 1x1 transparente: sirve de "archivo" base para una historia de solo texto
+  static const String _blankPngBase64 =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+  Future<void> startTextStory() async {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/text_story_base_${DateTime.now().millisecondsSinceEpoch}.png');
+    await file.writeAsBytes(base64Decode(_blankPngBase64));
+    isTextStory.value = true;
+    contentType.value = kImagen;
+    capturedFile.value = file;
+    activeTool.value = 'bg';
+    openTextEditor();
+  }
+
+  void addSticker(StorySticker sticker) {
+    stickers.add(sticker);
+    selectedStickerId.value = sticker.id;
+    selectedTextId.value = null;
+  }
+
+  void removeSticker(String id) {
+    stickers.removeWhere((s) => s.id == id);
+    if (selectedStickerId.value == id) selectedStickerId.value = null;
+  }
+
+  void moveSticker(String id, Offset position) {
+    final i = stickers.indexWhere((s) => s.id == id);
+    if (i != -1) stickers[i].position = position;
+  }
+
+  void scaleSticker(String id, double scale) {
+    final i = stickers.indexWhere((s) => s.id == id);
+    if (i != -1) stickers[i].scale = scale;
+  }
+
+  void startStroke(Offset p) {
+    strokes.add(StoryStroke(color: brushColor.value, width: brushSize.value, points: [p]));
+  }
+
+  void extendStroke(Offset p) {
+    if (strokes.isEmpty) return;
+    strokes.last.points.add(p);
+    strokes.refresh();
+  }
+
+  void undoStroke() {
+    if (strokes.isNotEmpty) strokes.removeLast();
+  }
+
+  void toggleTool(String tool) {
+    activeTool.value = activeTool.value == tool ? null : tool;
+    if (activeTool.value == 'draw') {
+      selectedTextId.value = null;
+      selectedStickerId.value = null;
+    }
+  }
   
 
   @override
@@ -213,8 +292,8 @@ Future<File?> captureStoryWithTexts() async {
   debugPrint('═══════════════════════════════════');
 
   try {
-    if (storyTexts.isEmpty) {
-      debugPrint('ℹ️ Sin textos, devolviendo original');
+    if (!needsBaking) {
+      debugPrint('ℹ️ Nada que combinar, devolviendo original');
       return capturedFile.value;
     }
 
@@ -559,6 +638,13 @@ Future<void> initializeCamera() async {
     isVideoReady.value = false;
     storyTexts.clear();
     selectedTextId.value = null;
+    isTextStory.value = false;
+    bgId.value = 'sunset';
+    filterId.value = 'none';
+    stickers.clear();
+    selectedStickerId.value = null;
+    strokes.clear();
+    activeTool.value = null;
     previewScreenWidth  = 0;
     previewScreenHeight = 0;
   } 

@@ -34,6 +34,23 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
   final RxBool _private = false.obs;
   final RxBool _publishing = false.obs;
 
+  /// Si llega una comunidad por argumentos, la pantalla funciona como edición.
+  CommunityEntity? _editing;
+
+  @override
+  void initState() {
+    super.initState();
+    final arg = Get.arguments is Map ? Get.arguments['community'] : null;
+    if (arg is CommunityEntity) {
+      _editing = arg;
+      _name.text = arg.name;
+      _description.text = arg.description ?? '';
+      _city.text = arg.city ?? '';
+      _category.value = arg.category;
+      _private.value = arg.privacy == 'privada';
+    }
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -53,15 +70,27 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
 
     try {
       _publishing.value = true;
-      final community = await _repo.create(
-        name: _name.text.trim(),
-        description: _description.text,
-        category: _category.value,
-        privacy: _private.value ? 'privada' : 'publica',
-        city: _city.text,
-        image: _image.value,
-        cover: _cover.value,
-      );
+      final editing = _editing;
+      final community = editing == null
+          ? await _repo.create(
+              name: _name.text.trim(),
+              description: _description.text,
+              category: _category.value,
+              privacy: _private.value ? 'privada' : 'publica',
+              city: _city.text,
+              image: _image.value,
+              cover: _cover.value,
+            )
+          : await _repo.update(
+              editing.id,
+              name: _name.text.trim(),
+              description: _description.text,
+              category: _category.value,
+              privacy: _private.value ? 'privada' : 'publica',
+              city: _city.text,
+              image: _image.value,
+              cover: _cover.value,
+            );
       Get.back<CommunityEntity>(result: community);
     } catch (e) {
       showErrorSnackbarGetx(cleanExceptionMessage(e));
@@ -80,7 +109,7 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(icon: Icon(LucideIcons.x, color: ThemeColor.textPrimary), onPressed: Get.back),
-        title: Text(_l.t('community_create'), style: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.w700, color: ThemeColor.textPrimary)),
+        title: Text(_editing == null ? _l.t('community_create') : _l.t('community_edit'), style: GoogleFonts.rubik(fontSize: 18, fontWeight: FontWeight.w700, color: ThemeColor.textPrimary)),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(2),
@@ -117,7 +146,7 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
                   decoration: BoxDecoration(gradient: ThemeColor.primaryGradient, borderRadius: BorderRadius.circular(20)),
                   child: _publishing.value
                       ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
-                      : Text(_l.t('community_create_btn'), style: GoogleFonts.rubik(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                      : Text(_editing == null ? _l.t('community_create_btn') : _l.t('community_save_btn'), style: GoogleFonts.rubik(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               )),
         ],
@@ -140,9 +169,11 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
                       color: FeedStyle.surface,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: FeedStyle.hairline),
-                      image: _cover.value != null ? DecorationImage(image: FileImage(_cover.value!), fit: BoxFit.cover) : null,
+                      image: _cover.value != null
+                          ? DecorationImage(image: FileImage(_cover.value!), fit: BoxFit.cover)
+                          : (_editing?.coverUrl != null ? DecorationImage(image: NetworkImage(_editing!.coverUrl!.replaceAll(' ', '%20')), fit: BoxFit.cover) : null),
                     ),
-                    child: _cover.value != null
+                    child: (_cover.value != null || _editing?.coverUrl != null)
                         ? null
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -167,10 +198,12 @@ class _CreateCommunityPageState extends State<CreateCommunityPage> {
                       color: FeedStyle.surface,
                       borderRadius: BorderRadius.circular(26),
                       border: Border.all(color: ThemeColor.backgroundColorfondo, width: 4),
-                      image: _image.value != null ? DecorationImage(image: FileImage(_image.value!), fit: BoxFit.cover) : null,
+                      image: _image.value != null
+                          ? DecorationImage(image: FileImage(_image.value!), fit: BoxFit.cover)
+                          : (_editing?.imageUrl != null ? DecorationImage(image: NetworkImage(_editing!.imageUrl!.replaceAll(' ', '%20')), fit: BoxFit.cover) : null),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
                     ),
-                    child: _image.value != null ? null : Icon(LucideIcons.camera, color: ThemeColor.primaryColor, size: 26),
+                    child: (_image.value != null || _editing?.imageUrl != null) ? null : Icon(LucideIcons.camera, color: ThemeColor.primaryColor, size: 26),
                   )),
             ),
           ),

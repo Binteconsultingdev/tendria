@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:get/get.dart';
@@ -756,6 +757,8 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
                             children: [
                               _RadarVideoBackground(size: size),
 
+                              const IgnorePointer(child: _NeonLogo()),
+
                               _buildDetectedPoints(),
                             ],
                           );
@@ -921,24 +924,38 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
     });
   }
 
-  List<Map<String, dynamic>> _calculateUserPositions(
-    List<GetUserEntity> users,
-  ) {
-    final positions = <Map<String, dynamic>>[];
-    final random = math.Random();
-    final int maxUsersToShow = math.min(users.length, 10);
+  List<int> _layoutIds = const [];
+  List<Map<String, dynamic>> _layoutPoints = const [];
 
-    for (int i = 0; i < maxUsersToShow; i++) {
-      final goldenAngle = math.pi * (3 - math.sqrt(5));
-      double angle = i * goldenAngle;
-      double radius = 70 + (i * 18);
-      radius = radius.clamp(70.0, 165.0);
-      angle += (random.nextDouble() - 0.5) * 0.6;
-      radius += (random.nextDouble() - 0.5) * 15;
-      double x = radius * math.cos(angle);
-      double y = radius * math.sin(angle);
-      positions.add({'x': x, 'y': y, 'delay': i * 0.15});
+  /// Reparte a las personas en dos anillos alrededor del logo: anillo interno (hasta 4) y externo (hasta 6),
+  /// alternando ángulos para que no se encimen. La disposición se conserva mientras la lista sea la misma.
+  List<Map<String, dynamic>> _calculateUserPositions(List<GetUserEntity> users) {
+    final n = math.min(users.length, 10);
+    final ids = users.take(n).map((u) => u.id ?? 0).toList();
+
+    if (_layoutIds.length == ids.length && List.generate(ids.length, (k) => _layoutIds[k] == ids[k]).every((e) => e)) {
+      return _layoutPoints;
     }
+
+    const innerR = 70.0;
+    const outerR = 120.0;
+    final inner = n <= 1 ? n : (n * 0.4).round().clamp(1, 4);
+    final outer = n - inner;
+
+    final positions = <Map<String, dynamic>>[];
+    for (int k = 0; k < n; k++) {
+      final onInner = k < inner;
+      final count = onInner ? inner : outer;
+      final idx = onInner ? k : k - inner;
+      // El anillo externo arranca desfasado medio paso respecto al interno
+      final start = onInner ? -math.pi / 2 + math.pi / 4 : -math.pi / 2 + math.pi / math.max(outer, 1) + 0.15;
+      final angle = start + idx * (2 * math.pi / count);
+      final r = onInner ? innerR : outerR;
+      positions.add({'x': r * math.cos(angle), 'y': r * math.sin(angle), 'delay': k * 0.15});
+    }
+
+    _layoutIds = ids;
+    _layoutPoints = positions;
     return positions;
   }
 
@@ -956,7 +973,7 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
       builder: (context, child) {
         return Positioned(
           left: 175 + x - 35,
-          top: 175 + y - 45,
+          top: 175 + y - 53,
           child: GestureDetector(
             key: isFirstProfile ? tutorialCtrl.profileDotKey : null,
             behavior: HitTestBehavior.translucent,
@@ -968,8 +985,12 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  if (user.status != null && user.status!.isNotEmpty)
-                    Container(
+                  SizedBox(
+                    height: 26,
+                    child: (user.status != null && user.status!.isNotEmpty)
+                        ? Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
                       constraints: const BoxConstraints(maxWidth: 70),
                       margin: const EdgeInsets.only(bottom: 3),
                       padding: const EdgeInsets.symmetric(
@@ -984,14 +1005,11 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
                           bottomRight: Radius.circular(8),
                           bottomLeft: Radius.circular(2),
                         ),
-                        border: Border.all(
-                          color: ThemeColor.colorstatus.withOpacity(0.6),
-                          width: 1,
-                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: ThemeColor.colorstatus.withOpacity(0.2),
-                            blurRadius: 4,
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -999,7 +1017,7 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
                         user.status!,
                         style: TextStyle(
                           color: ThemeColor.colorstatus,
-                          fontSize: 7,
+                          fontSize: 8,
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
@@ -1007,39 +1025,48 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                          )
+                        : null,
+                  ),
 
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 54,
+                        height: 54,
+                        padding: const EdgeInsets.all(2.5),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: ThemeColor.radarScanner,
-                            width: 2,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [ThemeColor.radarScanner, ThemeColor.radarScanner.withOpacity(0.55)],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: ThemeColor.radarScanner.withOpacity(0.8),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+                              color: ThemeColor.radarScanner.withOpacity(0.35),
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child:
-                              user.fotoUrl != null && user.fotoUrl!.isNotEmpty
-                              ? CachedNetworkImage(
-                                  imageUrl: user.fotoUrl!,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      _avatarPlaceholder(),
-                                  errorWidget: (context, url, error) =>
-                                      _avatarPlaceholder(),
-                                )
-                              : _avatarPlaceholder(),
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                          child: ClipOval(
+                            child: user.fotoUrl != null && user.fotoUrl!.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: user.fotoUrl!.replaceAll(' ', '%20'),
+                                    fit: BoxFit.cover,
+                                    memCacheWidth: 200,
+                                    fadeInDuration: const Duration(milliseconds: 200),
+                                    placeholder: (context, url) => _avatarPlaceholder(),
+                                    errorWidget: (context, url, error) => _avatarPlaceholder(),
+                                  )
+                                : _avatarPlaceholder(),
+                          ),
                         ),
                       ),
 
@@ -1064,44 +1091,32 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
 
                   Flexible(
                     child: Container(
-                      constraints: const BoxConstraints(maxWidth: 70),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 3,
-                      ),
+                      constraints: const BoxConstraints(maxWidth: 76),
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
-                        color: ThemeColor.cardBackground.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: ThemeColor.radarScanner.withOpacity(0.5),
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            (user.name ?? _l.t('user')).split(' ').first,
-                            style: TextStyle(
-                              color: ThemeColor.toggleThumb,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            '${user.age ?? 0} ${_l.t('years')}',
-                            style: TextStyle(
-                              color: ThemeColor.toggleThumb.withOpacity(0.7),
-                              fontSize: 7,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                        color: ThemeColor.cardBackground,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 2)),
                         ],
+                      ),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: (user.name ?? _l.t('user')).split(' ').first,
+                              style: TextStyle(color: ThemeColor.toggleThumb, fontSize: 10.5, fontWeight: FontWeight.w700),
+                            ),
+                            if ((user.age ?? 0) > 0)
+                              TextSpan(
+                                text: ', ${user.age}',
+                                style: TextStyle(color: ThemeColor.toggleThumb.withOpacity(0.6), fontSize: 10.5, fontWeight: FontWeight.w500),
+                              ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -1116,8 +1131,8 @@ class _RadarScannerScreenState extends State<RadarScannerScreen>
 
   Widget _avatarPlaceholder() {
     return Container(
-      color: ThemeColor.radarScanner.withOpacity(0.3),
-      child: Icon(Icons.person, color: ThemeColor.radarScanner, size: 20),
+      color: ThemeColor.radarScanner.withOpacity(0.12),
+      child: Icon(Icons.person_rounded, color: ThemeColor.radarScanner.withOpacity(0.7), size: 26),
     );
   }
 }
@@ -1137,29 +1152,7 @@ class _RadarVideoBackgroundState extends State<_RadarVideoBackground> {
   String get _videoAsset {
     final isDark =
         Get.find<ThemeController>().themeMode.value != AppThemeMode.light;
-    return isDark
-        ? 'assets/video/radarback.mp4'
-        : 'assets/video/radarwhite.mp4';
-  }
-
-  Future<void> _initController() async {
-    final controller = VideoPlayerController.asset(_videoAsset);
-    await controller.initialize();
-    controller.setLooping(true);
-    controller.setVolume(0);
-    controller.play();
-
-    if (!mounted) {
-      controller.dispose();
-      return;
-    }
-
-    await _controller.dispose();
-    setState(() {
-      _controller = controller;
-      _wasDark =
-          Get.find<ThemeController>().themeMode.value != AppThemeMode.light;
-    });
+    return 'assets/video/radarback.mp4';
   }
 
   @override
@@ -1188,10 +1181,13 @@ class _RadarVideoBackgroundState extends State<_RadarVideoBackground> {
       final isDark =
           Get.find<ThemeController>().themeMode.value != AppThemeMode.light;
 
-      if (isDark != _wasDark) {
-        _wasDark = isDark;
-        WidgetsBinding.instance.addPostFrameCallback((_) => _initController());
+      _wasDark = isDark;
+
+      if (!isDark) {
+        _controller.pause();
+        return _LightRadar(size: widget.size);
       }
+      if (_controller.value.isInitialized && !_controller.value.isPlaying) _controller.play();
 
       if (!_controller.value.isInitialized) {
         return SizedBox(width: widget.size, height: widget.size);
@@ -1471,4 +1467,211 @@ class RotatingScanLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+
+/// Radar vectorial para el modo claro: anillos finos, barrido con estela y pulso central (nítido a cualquier resolución).
+class _LightRadar extends StatefulWidget {
+  final double size;
+  const _LightRadar({required this.size});
+
+  @override
+  State<_LightRadar> createState() => _LightRadarState();
+}
+
+class _LightRadarState extends State<_LightRadar> with SingleTickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(vsync: this, duration: const Duration(seconds: 5))..repeat();
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(
+          animation: _anim,
+          builder: (_, __) => CustomPaint(painter: _LightRadarPainter(_anim.value)),
+        ),
+      ),
+    );
+  }
+}
+
+class _LightRadarPainter extends CustomPainter {
+  final double t; // 0..1
+  _LightRadarPainter(this.t);
+
+  static const Color _accent = ThemeColor.radarScanner;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 6;
+
+    // Sombra suave y fondo con degradado radial
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..color = _accent.withValues(alpha: 0.10)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [Colors.white, const Color(0xFFFFF4F4), const Color(0xFFFCE3E5)],
+          stops: const [0.0, 0.62, 1.0],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+
+    // Anillos concéntricos
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (var i = 1; i <= 4; i++) {
+      ring.color = _accent.withValues(alpha: i == 4 ? 0.28 : 0.11 + i * 0.015);
+      canvas.drawCircle(c, r * i / 4, ring);
+    }
+
+    // Cruz de referencia
+    final cross = Paint()
+      ..color = _accent.withValues(alpha: 0.08)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(c.dx - r, c.dy), Offset(c.dx + r, c.dy), cross);
+    canvas.drawLine(Offset(c.dx, c.dy - r), Offset(c.dx, c.dy + r), cross);
+
+    // Marcas en el borde cada 15°
+    final tick = Paint()
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 24; i++) {
+      final a = i * math.pi / 12;
+      final long = i % 6 == 0;
+      tick.color = _accent.withValues(alpha: long ? 0.45 : 0.22);
+      final len = long ? 9.0 : 5.0;
+      canvas.drawLine(
+        Offset(c.dx + (r - len) * math.cos(a), c.dy + (r - len) * math.sin(a)),
+        Offset(c.dx + r * math.cos(a), c.dy + r * math.sin(a)),
+        tick,
+      );
+    }
+
+    // Barrido con estela
+    final angle = t * 2 * math.pi;
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    canvas.rotate(angle);
+    canvas.drawCircle(
+      Offset.zero,
+      r,
+      Paint()
+        ..shader = SweepGradient(
+          startAngle: -math.pi * 0.75,
+          endAngle: 0,
+          colors: [_accent.withValues(alpha: 0), _accent.withValues(alpha: 0.05), _accent.withValues(alpha: 0.26)],
+          stops: const [0.0, 0.6, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset.zero, radius: r)),
+    );
+    canvas.drawLine(
+      Offset.zero,
+      Offset(r, 0),
+      Paint()
+        ..color = _accent.withValues(alpha: 0.75)
+        ..strokeWidth = 1.6
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.restore();
+
+    // Pulso que se expande desde el centro (dos ondas desfasadas)
+    for (final phase in [0.0, 0.5]) {
+      final p = (t * 2 + phase) % 1.0;
+      canvas.drawCircle(
+        c,
+        r * 0.12 + r * 0.88 * p,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4
+          ..color = _accent.withValues(alpha: (1 - p) * 0.22),
+      );
+    }
+
+  }
+
+  @override
+  bool shouldRepaint(covariant _LightRadarPainter old) => old.t != t;
+}
+
+
+/// Logo corto de Tatendria con efecto neón que "respira" en el centro del radar.
+class _NeonLogo extends StatefulWidget {
+  const _NeonLogo();
+
+  @override
+  State<_NeonLogo> createState() => _NeonLogoState();
+}
+
+class _NeonLogoState extends State<_NeonLogo> with SingleTickerProviderStateMixin {
+  late final AnimationController _anim =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))..repeat(reverse: true);
+
+  static const String _asset = 'assets/logo/logo-neon.png';
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  Widget _tinted(Color color, {double blur = 0}) {
+    final image = ColorFiltered(
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      child: Image.asset(_asset, height: 62, fit: BoxFit.contain),
+    );
+    return blur == 0 ? image : ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur), child: image);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Get.find<ThemeController>().themeMode.value != AppThemeMode.light;
+    const neon = Color(0xFFFF3B55);
+
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (_, __) {
+          final glow = 0.55 + 0.45 * _anim.value;
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Disco suave detrás para que el logo se lea sobre el barrido
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
+                      (isDark ? Colors.black : Colors.white).withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+              Opacity(opacity: glow * 0.9, child: _tinted(neon, blur: 14)),
+              Opacity(opacity: glow, child: _tinted(neon, blur: 5)),
+              _tinted(isDark ? const Color(0xFFFFB3BE) : neon),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }

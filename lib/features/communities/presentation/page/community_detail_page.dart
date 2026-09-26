@@ -599,6 +599,16 @@ class _CommunityDetailPageState extends State<CommunityDetailPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (c.isAdmin)
+                ListTile(
+                  leading: Icon(LucideIcons.pencil, color: ThemeColor.textPrimary),
+                  title: Text(_l.t('community_edit')),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    final updated = await Get.toNamed(RoutesNames.createCommunityPage, arguments: {'community': c});
+                    if (updated is CommunityEntity) _load();
+                  },
+                ),
               if (c.isCreator)
                 ListTile(
                   leading: const Icon(LucideIcons.trash2, color: Colors.redAccent),

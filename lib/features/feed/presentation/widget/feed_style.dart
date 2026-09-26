@@ -28,11 +28,28 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPhoto = url != null && url!.isNotEmpty;
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: ThemeColor.textSecondary.withValues(alpha: 0.15),
-      backgroundImage: hasPhoto ? CachedNetworkImageProvider(url!, maxWidth: (radius * 6).round()) : null,
-      child: hasPhoto ? null : Icon(Icons.person_rounded, size: radius, color: ThemeColor.textSecondary),
+    final bg = ThemeColor.textSecondary.withValues(alpha: 0.15);
+    final placeholder = ColoredBox(
+      color: bg,
+      child: Icon(Icons.person_rounded, size: radius, color: ThemeColor.textSecondary),
+    );
+
+    // Si la foto no carga (o no existe) se ve el icono de persona, nunca un círculo negro
+    return SizedBox(
+      width: radius * 2,
+      height: radius * 2,
+      child: ClipOval(
+        child: hasPhoto
+            ? CachedNetworkImage(
+                imageUrl: url!.replaceAll(' ', '%20'),
+                fit: BoxFit.cover,
+                memCacheWidth: (radius * 6).round(),
+                fadeInDuration: const Duration(milliseconds: 150),
+                placeholder: (_, __) => ColoredBox(color: bg),
+                errorWidget: (_, __, ___) => placeholder,
+              )
+            : placeholder,
+      ),
     );
   }
 }

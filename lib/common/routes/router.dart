@@ -12,6 +12,7 @@ import 'package:tendria/common/settings/routes_names.dart';
 import 'package:tendria/features/auth/presentation/page/Splash/splash_page.dart';
 import 'package:tendria/features/auth/presentation/page/home/start_page.dart';
 import 'package:tendria/features/auth/presentation/page/login/login_page.dart';
+import 'package:tendria/features/moderation/moderation_page.dart';
 import 'package:tendria/features/auth/presentation/page/login/forgot_password_page.dart';
 import 'package:tendria/features/auth/presentation/page/register/register_page.dart';
 import 'package:tendria/features/chat/presentation/page/chat_page.dart'; 
@@ -50,6 +51,7 @@ class AppPages {
         GetPage(name: RoutesNames.foryoupage, page: () => ForYouPage()),
         GetPage(name: RoutesNames.loginPage, page: () => LoginPage()),
         GetPage(name: RoutesNames.registerPage, page: () => RegisterPage()),
+        GetPage(name: RoutesNames.moderationPage, page: () => const ModerationPage()),
         GetPage(name: RoutesNames.forgotPasswordPage, page: () => const ForgotPasswordPage()),
         GetPage(name: RoutesNames.homePage, page: () => StartPage()),
         GetPage(name: RoutesNames.nearbyProfilesPage, page: () => NearbyUsersPage()),

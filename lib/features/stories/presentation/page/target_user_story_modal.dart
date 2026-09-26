@@ -1,3 +1,4 @@
+import 'package:tendria/features/stories/presentation/widgets/story_reply_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tendria/common/theme/App_Theme.dart';
@@ -305,23 +306,12 @@ class _TargetUserStoryModalState extends State<TargetUserStoryModal>
         right: 16,
         top: 16,
       ),
-      child: SizedBox(
-        height: 50,
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              currentStory.yaLikeada ? Icons.favorite : Icons.favorite_border,
-              color: currentStory.yaLikeada ? Colors.red : Colors.white,
-              size: 26,
-            ),
-          ),
-        ),
+      child: StoryReplyBar(
+        key: ValueKey('reply_${currentStory.id}'),
+        storyId: currentStory.id,
+        initialReaction: currentStory.yaLikeada ? 'me_encanta' : null,
+        onPause: controller.pauseStory,
+        onResume: controller.resumeStory,
       ),
     );
   }

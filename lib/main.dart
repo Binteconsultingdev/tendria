@@ -8,7 +8,7 @@ import 'package:tendria/common/settings/enviroment.dart';
 import 'package:tendria/firebase_options.dart';
 import 'package:tendria/framework/preferences_service.dart';
 
-String enviromentSelect = Enviroment.testing.value;
+String enviromentSelect = Enviroment.production.value;
 final facebookAppEvents = FacebookAppEvents();
  
 void main() async {

@@ -70,12 +70,17 @@ class FeedDataSourcesImp {
         return _postPage(_decode(r));
       });
 
-  Future<PostEntity> createPost(String token, {String? text, List<File> files = const [], int? communityId}) =>
+  Future<PostEntity> createPost(String token,
+          {String? text, List<File> files = const [], int? communityId, String? layout, String? background, String? feeling, String? location}) =>
       _guard(() async {
         final request = http.MultipartRequest('POST', Uri.parse('$_base/Posts'));
         request.headers['Authorization'] = 'Bearer $token';
         if (text != null && text.trim().isNotEmpty) request.fields['texto'] = text.trim();
         if (communityId != null) request.fields['comunidadId'] = '$communityId';
+        if (layout != null) request.fields['layout'] = layout;
+        if (background != null) request.fields['fondo'] = background;
+        if (feeling != null) request.fields['sentimiento'] = feeling;
+        if (location != null && location.trim().isNotEmpty) request.fields['ubicacion'] = location.trim();
         for (final file in files) {
           request.files.add(await http.MultipartFile.fromPath('archivos', file.path));
         }

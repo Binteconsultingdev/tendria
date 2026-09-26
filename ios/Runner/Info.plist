@@ -48,6 +48,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usa Face ID para entrar rápidamente a tu cuenta.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Necesitamos acceso a tu cámara para que puedas tomar fotos o videos y subirlos a tus historias o foto de perfil.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

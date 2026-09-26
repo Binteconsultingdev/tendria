@@ -343,6 +343,42 @@ class ChatPage extends GetView<ChatController> {
     );
   }
 
+  /// Vista previa de la historia a la que responde el mensaje.
+  Widget _storyReplyCard(MensajeEntity mensaje, bool isOwn) {
+    final url = mensaje.storyUrl!;
+    final isVideo = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.mov');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: (isOwn ? Colors.white : ThemeColor.primaryColor).withValues(alpha: isOwn ? 0.16 : 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 40,
+              height: 64,
+              child: isVideo
+                  ? Container(color: Colors.black87, child: const Icon(LucideIcons.play, color: Colors.white70, size: 20))
+                  : Image.network(url.replaceAll(' ', '%20'), fit: BoxFit.cover, cacheWidth: 120, errorBuilder: (_, __, ___) => Container(color: Colors.black26)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              isOwn ? _l.t('story_reply_own') : _l.t('story_reply_other'),
+              style: GoogleFonts.rubik(fontSize: 12, fontWeight: FontWeight.w500, color: isOwn ? Colors.white.withValues(alpha: 0.9) : ThemeColor.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(MensajeEntity mensaje) {
     if (mensaje.giftCode != null) return _buildGiftBubble(mensaje);
 
@@ -373,6 +409,7 @@ class ChatPage extends GetView<ChatController> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              if (mensaje.storyUrl != null && mensaje.storyUrl!.isNotEmpty) _storyReplyCard(mensaje, isOwn),
               if (hasText)
                 Align(
                   alignment: Alignment.centerLeft,
@@ -473,7 +510,12 @@ class ChatPage extends GetView<ChatController> {
                           style: GoogleFonts.rubik(fontSize: 15, color: ThemeColor.textPrimary),
                           decoration: InputDecoration(
                             isDense: true,
+                            filled: false,
+                            fillColor: Colors.transparent,
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                             hintText: blocked ? _l.t('chat_hint_blocked') : _l.t('chat_hint'),
                             hintStyle: GoogleFonts.rubik(fontSize: 15, color: ThemeColor.textSecondary),

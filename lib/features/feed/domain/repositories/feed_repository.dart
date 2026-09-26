@@ -6,7 +6,15 @@ abstract class FeedRepository {
   Future<CursorPage<PostEntity>> getFeed({int? cursor, int pageSize = 10});
   Future<CursorPage<PostEntity>> getUserPosts(int userId, {int? cursor, int pageSize = 10});
   Future<PostEntity> getPost(int postId);
-  Future<PostEntity> createPost({String? text, List<File> files = const [], int? communityId});
+  Future<PostEntity> createPost({
+    String? text,
+    List<File> files = const [],
+    int? communityId,
+    String? layout,
+    String? background,
+    String? feeling,
+    String? location,
+  });
   Future<CursorPage<PostEntity>> getCommunityPosts(int communityId, {int? cursor, int pageSize = 10});
   Future<void> deletePost(int postId);
 

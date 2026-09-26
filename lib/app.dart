@@ -58,6 +58,10 @@ class App extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => ColoredBox(
+        color: ThemeColor.cardBackground,
+        child: SafeArea(top: false, left: false, right: false, child: child ?? const SizedBox.shrink()),
+      ),
       defaultTransition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 260),
      

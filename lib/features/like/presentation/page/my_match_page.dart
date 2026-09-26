@@ -1,3 +1,5 @@
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:tendria/common/widgets/brand_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/settings/language_controller.dart';
@@ -18,19 +20,33 @@ class MyMatchView extends GetView<MyMatchController> {
   Widget build(BuildContext context) {
     return Obx(() => Scaffold(
           backgroundColor: ThemeColor.backgroundColorfondo,
+          appBar: BrandAppBar(
+            extraActions: [
+              if (controller.isSilentLoading.value)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: SizedBox(
+                    width: 15,
+                    height: 15,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: ThemeColor.primaryColor),
+                  ),
+                ),
+              IconButton(
+                tooltip: 'Buscar',
+                icon: Icon(controller.isSearching.value ? LucideIcons.x : LucideIcons.search,
+                    size: 21, color: ThemeColor.textPrimary),
+                onPressed: controller.toggleSearch,
+              ),
+            ],
+          ),
           body: SafeArea(
             child: Column(
               children: [
-                _buildHeader(),
                 Obx(() {
                   if (controller.isSearching.value) {
                     return _buildSearchBar();
                   }
-                  return Divider(
-                    color: ThemeColor.dividerColor,
-                    height: 1,
-                    thickness: 1,
-                  );
+                  return const SizedBox.shrink();
                 }),
                 Expanded(
                   child: Obx(() {

@@ -1,3 +1,4 @@
+import 'package:tendria/common/widgets/brand_app_bar.dart';
 import 'package:tendria/features/communities/presentation/widget/community_card.dart';
 import 'package:tendria/features/communities/domain/entities/community_entities.dart';
 import 'package:tendria/features/plans/presentation/widget/plan_card.dart';
@@ -84,45 +85,7 @@ class _FeedPageState extends State<FeedPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ThemeColor.backgroundColorfondo,
-      appBar: AppBar(
-        backgroundColor: FeedStyle.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        centerTitle: false,
-        titleSpacing: 16,
-        title: Text(
-          'Tatendria',
-          style: GoogleFonts.rubik(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.5,
-            color: ThemeColor.primaryColor,
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Notificaciones',
-            icon: Icon(LucideIcons.bell, size: 21, color: ThemeColor.textPrimary),
-            onPressed: () => Get.toNamed(RoutesNames.notificationPage),
-          ),
-          Obx(() => IconButton(
-                // El tutorial de inicio señala este botón como "Radar" (solo mientras está pendiente)
-                key: Get.isRegistered<StartTutorialController>() && Get.find<StartTutorialController>().pending.value
-                    ? Get.find<StartTutorialController>().navRadarKey
-                    : null,
-                tooltip: 'Radar',
-                icon: Icon(LucideIcons.radar, size: 21, color: ThemeColor.textPrimary),
-                onPressed: () => Get.find<StartController>().openRadar(),
-              )),
-          const SizedBox(width: 4),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: FeedStyle.hairline),
-        ),
-      ),
+      appBar: const BrandAppBar(attachRadarKey: true),
       body: PostListView(
         controller: controller,
         onRefresh: _refreshAll,

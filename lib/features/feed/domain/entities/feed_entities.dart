@@ -81,6 +81,10 @@ class PostEntity {
   final bool isMine;
   final bool canDelete; // autor, o admin/moderador de la comunidad
   final CommunityBrief? community;
+  final String? layout; // carrete | mosaico | cuadricula
+  final String? background; // id del fondo de una publicación de texto
+  final String? feeling; // id de "cómo te sientes"
+  final String? location;
 
   PostEntity({
     required this.id,
@@ -95,6 +99,10 @@ class PostEntity {
     required this.isMine,
     this.canDelete = false,
     this.community,
+    this.layout,
+    this.background,
+    this.feeling,
+    this.location,
   });
 
   factory PostEntity.fromJson(Map<String, dynamic> json) => PostEntity(
@@ -113,6 +121,10 @@ class PostEntity {
         isMine: json['esMio'] ?? false,
         canDelete: json['puedeEliminar'] ?? (json['esMio'] ?? false),
         community: json['comunidad'] != null ? CommunityBrief.fromJson(json['comunidad']) : null,
+        layout: json['layout'],
+        background: json['fondo'],
+        feeling: json['sentimiento'],
+        location: json['ubicacion'],
       );
 }
 

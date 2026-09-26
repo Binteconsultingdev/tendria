@@ -65,6 +65,8 @@ dependencies:
 
   mobile_scanner: ^7.2.0
   lucide_icons_flutter: ^3.1.20
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.4
 flutter_native_splash:
   color: "#000000"
   image: assets/logo/icon.jpeg
@@ -116,6 +118,7 @@ flutter:
   assets:
    -  test.env
    - .env
+   - assets/google_fonts/
    - dev.env
    - assets/video/radarback.mp4
    - assets/video/radarwhite.mp4
@@ -135,6 +138,9 @@ flutter:
    - assets/logo/iosicon.jpg
    - assets/logo/icon.jpeg
    - assets/logo/logo-radar.png
+   - assets/logo/logo-neon.png
+   - assets/logo/logo-wordmark.png
+   - assets/logo/logo-wordmark-dark.png
    - assets/logo/logo-radar-dark.png
    - assets/tutorial/tutorial1.png
    - assets/tutorial/tutorial2.png

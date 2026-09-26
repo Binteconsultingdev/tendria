@@ -6,7 +6,8 @@ enum AppThemeMode { light, dark, vip }
 
 class ThemeController extends GetxController {
   final _prefs = PreferencesUser();
-  final Rx<AppThemeMode> themeMode = AppThemeMode.vip.obs;
+  // El tema dorado (vip) ya no se usa: la app tiene solo claro y oscuro
+  final Rx<AppThemeMode> themeMode = AppThemeMode.light.obs;
  
   bool get isDarkMode => themeMode.value == AppThemeMode.dark;
   bool get isVipMode => themeMode.value == AppThemeMode.vip;
@@ -21,9 +22,10 @@ class ThemeController extends GetxController {
 
   Future<void> _loadTheme() async {
     final saved = await _prefs.loadPrefs(type: int, key: _key);
-    themeMode.value = (saved != null && saved < AppThemeMode.values.length)
+    // Quien tenía guardado el tema dorado pasa al claro
+    themeMode.value = (saved != null && saved >= 0 && saved <= AppThemeMode.dark.index)
         ? AppThemeMode.values[saved]
-        : AppThemeMode.vip;
+        : AppThemeMode.light;
     _applyFlutterThemeMode();
   }
 
@@ -37,10 +39,10 @@ class ThemeController extends GetxController {
     setThemeMode(isDarkMode ? AppThemeMode.light : AppThemeMode.dark);
   }
 
-  void toggleVip() {
-    setThemeMode(isVipMode ? AppThemeMode.dark : AppThemeMode.vip);
-  }
  
+  /// Antes activaba el tema dorado; ahora solo alterna claro/oscuro (se conserva por si alguna pantalla antigua lo llama)
+  void toggleVip() => toggleTheme();
+
   void _applyFlutterThemeMode() {
     Get.changeThemeMode(
       themeMode.value == AppThemeMode.light ? ThemeMode.light : ThemeMode.dark,

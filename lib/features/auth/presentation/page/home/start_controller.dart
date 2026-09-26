@@ -34,7 +34,7 @@ class StartController extends GetxController with WidgetsBindingObserver {
     const FeedPage(),
   ];
 
-  final List<String> labels = ['Perfil', 'Radar', 'Match', 'Chat', 'Feed'];
+  final List<String> labels = ['Perfil', 'Radar', 'Descubrir', 'Chat', 'Feed'];
 
   final List<String> iconPaths = [
     'assets/icons/home/perfil.png',
@@ -63,7 +63,7 @@ class StartController extends GetxController with WidgetsBindingObserver {
   /// Iconos de la barra (la pestaña activa se distingue por color y peso de la etiqueta).
   List<IconData> get navIconData => const [
     LucideIcons.house,
-    LucideIcons.heart,
+    LucideIcons.compass,
     LucideIcons.messageCircleMore,
     LucideIcons.circleUser,
   ];

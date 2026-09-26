@@ -10,6 +10,7 @@ class MensajeEntity {
 final DateTime? leidoEn;
   final String? giftCode; // presente si el mensaje es un regalo
   final String? giftName;
+  final String? storyUrl; // presente si el mensaje responde a una historia
   MensajeEntity({
     required this.id,
     required this.chatId,
@@ -22,5 +23,6 @@ final DateTime? leidoEn;
     this.leidoEn,
     this.giftCode,
     this.giftName,
+    this.storyUrl,
   });
 }

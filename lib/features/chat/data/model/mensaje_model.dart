@@ -13,6 +13,7 @@ class MensajeModel extends MensajeEntity {
     super.leidoEn,
     super.giftCode,
     super.giftName,
+    super.storyUrl,
   });
 
   factory MensajeModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +29,7 @@ class MensajeModel extends MensajeEntity {
       leidoEn: json['leidoEn'] != null ? DateTime.parse(json['leidoEn']) : null,
       giftCode: json['regaloCodigo'],
       giftName: json['regaloNombre'],
+      storyUrl: json['historiaUrl'],
     );
   }
 }

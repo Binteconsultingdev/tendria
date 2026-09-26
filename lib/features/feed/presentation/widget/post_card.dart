@@ -1,3 +1,5 @@
+import 'package:tendria/features/feed/presentation/widget/post_media_layouts.dart';
+import 'package:tendria/features/feed/presentation/widget/post_style.dart';
 import 'package:tendria/features/gift/presentation/widget/gift_sheet.dart';
 import 'package:tendria/features/feed/presentation/widget/reaction_icon.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -30,7 +32,9 @@ class PostCard extends StatelessWidget {
   LanguageController get _l => Get.find<LanguageController>();
 
   bool get _isTextCard =>
-      post.media.isEmpty && post.text != null && post.text!.trim().length <= 160 && !post.text!.contains('\n');
+      post.media.isEmpty &&
+      post.text != null &&
+      (post.background != null || (post.text!.trim().length <= 160 && !post.text!.contains('\n')));
 
   void _likeFromDoubleTap() {
     if (post.myReaction != _quickReaction) controller.react(post, type: _quickReaction);
@@ -58,7 +62,10 @@ class PostCard extends StatelessWidget {
         children: [
           _header(context),
           if (_isTextCard) _textCard(),
-          if (post.media.isNotEmpty) _MediaCarousel(media: post.media, onDoubleTapLike: _likeFromDoubleTap),
+          if (post.media.length >= 2 && (post.layout == PostLayouts.mosaic || post.layout == PostLayouts.grid))
+            PostMediaGallery(media: post.media, layout: post.layout!)
+          else if (post.media.isNotEmpty)
+            _MediaCarousel(media: post.media, onDoubleTapLike: _likeFromDoubleTap),
           _actions(context),
           if (!_isTextCard && post.text != null && post.text!.isNotEmpty)
             Padding(
@@ -111,10 +118,16 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(post.author.name, style: FeedStyle.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        _nameLine(),
                         Row(
                           children: [
                             Text(timeAgo(post.createdAt), style: FeedStyle.meta),
+                            if (post.location != null && post.location!.isNotEmpty) ...[
+                              Text('  ·  ', style: FeedStyle.meta),
+                              Icon(LucideIcons.mapPin, size: 12, color: ThemeColor.textSecondary),
+                              const SizedBox(width: 2),
+                              Flexible(child: Text(post.location!, maxLines: 1, overflow: TextOverflow.ellipsis, style: FeedStyle.meta)),
+                            ],
                             if (post.community != null) ...[
                               Text('  ·  ', style: FeedStyle.meta),
                               Flexible(
@@ -170,23 +183,54 @@ class PostCard extends StatelessWidget {
     );
   }
 
+  /// Nombre del autor y, si lo indicó, "se siente <sentimiento>".
+  Widget _nameLine() {
+    final feeling = PostFeeling.of(post.feeling);
+    if (feeling == null) {
+      return Text(post.author.name, style: FeedStyle.name, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+    return Text.rich(
+      TextSpan(
+        style: FeedStyle.name,
+        children: [
+          TextSpan(text: post.author.name),
+          TextSpan(text: ' ${_l.t('post_feels')} ', style: FeedStyle.meta.copyWith(fontSize: 13.5)),
+          WidgetSpan(alignment: PlaceholderAlignment.middle, child: FeelingBadge(feeling: feeling, size: 17)),
+          TextSpan(text: ' ${_l.t('feeling_${feeling.id}')}', style: FeedStyle.name.copyWith(fontSize: 13.5)),
+        ],
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
   Widget _textCard() {
+    final bg = PostBackground.of(post.background);
+    final text = post.text!.trim();
+    // Cuanto más largo el texto, más chica la letra
+    final size = text.length <= 60 ? 26.0 : (text.length <= 140 ? 22.0 : (text.length <= 260 ? 19.0 : 16.5));
+
     return GestureDetector(
       onDoubleTap: _likeFromDoubleTap,
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 150),
+        constraints: BoxConstraints(minHeight: bg != null ? 250 : 150),
         margin: const EdgeInsets.symmetric(horizontal: 14),
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(24),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: ThemeColor.primaryGradient,
-          borderRadius: BorderRadius.circular(18),
+          gradient: bg?.gradient ?? ThemeColor.primaryGradient,
+          borderRadius: BorderRadius.circular(bg != null ? 22 : 18),
         ),
         child: Text(
-          post.text!.trim(),
+          text,
           textAlign: TextAlign.center,
-          style: GoogleFonts.rubik(fontSize: 18, height: 1.4, fontWeight: FontWeight.w500, color: Colors.white),
+          style: GoogleFonts.rubik(
+            fontSize: bg != null ? size : 18,
+            height: 1.35,
+            fontWeight: bg != null ? FontWeight.w600 : FontWeight.w500,
+            color: bg?.textColor ?? Colors.white,
+          ),
         ),
       ),
     );

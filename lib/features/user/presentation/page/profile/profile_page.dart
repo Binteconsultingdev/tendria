@@ -1,3 +1,4 @@
+import 'package:tendria/features/moderation/moderation_repository.dart';
 import 'package:tendria/common/theme/elite.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -139,6 +140,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Text(_l.t('profile'),
                           style: GoogleFonts.rubik(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
                           overflow: TextOverflow.ellipsis),
+                    ),
+                    // Solo las cuentas administradoras ven el acceso a moderación
+                    FutureBuilder<bool>(
+                      future: ModerationRepository.instance.isAdmin(),
+                      builder: (_, snap) => snap.data == true
+                          ? _barButton(null, LucideIcons.shieldCheck, () => Get.toNamed(RoutesNames.moderationPage))
+                          : const SizedBox.shrink(),
                     ),
                     _barButton(tutorialCtrl.blockedUsersKey, LucideIcons.userX, controller.onViewBlockedUsers),
                     _barButton(tutorialCtrl.notificationsKey, LucideIcons.bell, controller.onViewNotifications),

@@ -1,3 +1,9 @@
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:tendria/features/discover/discover_filters_sheet.dart';
+import 'package:tendria/features/discover/discover_filters.dart';
+import 'package:tendria/common/widgets/brand_app_bar.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:tendria/features/discover/discover_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tendria/common/settings/language_controller.dart';
@@ -16,17 +22,18 @@ class LikedByUsersView extends GetView<LikedByUsersController> {
   Widget build(BuildContext context) {
     return Obx(() => Scaffold(
           backgroundColor: ThemeColor.backgroundColorfondo,
+          appBar: const BrandAppBar(),
           body: SafeArea(
             child: Column(
               children: [
-                Obx(() => _buildHeader()),
-                _buildTabSwitch(),
+                _buildTabs(),
                 Expanded(
                   child: Obx(() {
-                    if (controller.activeTab.value == 0) {
-                      return _buildPendingChatsSection();
-                    } else {
-                      return _buildLikesSection();
+                    switch (controller.activeTab.value) {
+                      case 2:
+                        return const DiscoverView();
+                      default:
+                        return _buildLikesSection();
                     }
                   }),
                 ),
@@ -37,193 +44,109 @@ class LikedByUsersView extends GetView<LikedByUsersController> {
   }
  
 
-  Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.all(ThemeColor.paddingMedium),
-      color: ThemeColor.cardBackground,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const SizedBox(width: 8),
-              ThemeColor.widgetLogo(width: 100, height: 100),
-              const SizedBox(width: 8),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: ThemeColor.primaryColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                controller.activeTab.value == 0
-                    ? _l.t('pending_chats')
-                    : 'Les gusté',
-                style: ThemeColor.subtitleLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: ThemeColor.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              Obx(() {
-                final count = controller.activeTab.value == 0
-                    ? controller.pendingChats.length
-                    : controller.likedByUsers.length;
-                if (count == 0) return const SizedBox.shrink();
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: ThemeColor.backgroundColorfondo,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        size: 26,
-                        color: ThemeColor.textPrimary,
-                      ),
-                    ),
-                    Positioned(
-                      top: -4,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                            minWidth: 20, minHeight: 20),
-                        decoration: BoxDecoration(
-                          color: ThemeColor.primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          count > 99 ? '99+' : '$count',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-              const SizedBox(width: 8),
-            ],
-          ),
-          SizedBox(height: ThemeColor.paddingSmall),
-          Text(
-            controller.activeTab.value == 0
-                ? _l.t('unlock_hint')
-                : 'Usuarios que te dieron like',
-            style: ThemeColor.bodyMedium.copyWith(
-              color: ThemeColor.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
- 
-
-  Widget _buildTabSwitch() {
+  /// Barra superior mínima: dos pestañas de texto con subrayado y una línea fina debajo.
+  Widget _buildTabs() {
     return Obx(() => Container(
-          margin: EdgeInsets.all(ThemeColor.paddingMedium),
-          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: ThemeColor.cardBackground,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [ThemeColor.lightShadow],
+            border: Border(bottom: BorderSide(color: ThemeColor.textSecondary.withValues(alpha: 0.14))),
           ),
+          padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
           child: Row(
             children: [
-              _buildTabItem(
-                index: 0,
-                icon: Icons.chat_bubble_outline_rounded,
-                label: 'Pendientes',
-                count: controller.pendingChats.length,
-              ),
-              _buildTabItem(
-                index: 1,
-                icon: Icons.favorite_rounded,
-                label: 'Les gusté',
-                count: controller.likedByUsers.length,
-              ),
+              _tab(index: 2, label: _l.t('discover_title')),
+              const SizedBox(width: 28),
+              _tab(index: 1, label: 'Les gusté', count: controller.likedByUsers.length),
+              const Spacer(),
+              if (controller.activeTab.value == 2) _filterButton(),
             ],
           ),
         ));
   }
 
-  Widget _buildTabItem({
-    required int index,
-    required IconData icon,
-    required String label,
-    required int count,
-  }) {
-    final isActive = controller.activeTab.value == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => controller.switchTab(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isActive ? ThemeColor.primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+  /// Botón de filtros de Descubrir, con un globito que indica cuántos filtros están activos.
+  Widget _filterButton() {
+    return ValueListenableBuilder<DiscoverFilters>(
+      valueListenable: DiscoverState.instance.filters,
+      builder: (context, f, _) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showDiscoverFilters(context),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 2),
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isActive
-                    ? ThemeColor.textLightColor
-                    : ThemeColor.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive
-                      ? ThemeColor.textLightColor
-                      : ThemeColor.textSecondary,
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: f.isActive ? ThemeColor.primaryColor.withValues(alpha: 0.12) : Colors.transparent,
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(LucideIcons.slidersHorizontal, size: 19, color: f.isActive ? ThemeColor.primaryColor : ThemeColor.textPrimary),
               ),
-              if (count > 0) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Colors.white.withOpacity(0.3)
-                        : ThemeColor.primaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    count > 99 ? '99+' : '$count',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isActive ? ThemeColor.textLightColor : Colors.white,
-                    ),
+              if (f.isActive)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(color: ThemeColor.primaryColor, shape: BoxShape.circle),
+                    child: Text('${f.activeCount}', style: GoogleFonts.rubik(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
-              ],
             ],
           ),
         ),
       ),
     );
   }
- 
+
+  Widget _tab({required int index, required String label, int count = 0}) {
+    final active = controller.activeTab.value == index;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => controller.switchTab(index),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.rubik(
+                    fontSize: 18,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                    color: active ? ThemeColor.textPrimary : ThemeColor.textSecondary,
+                  ),
+                ),
+                if (count > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                    decoration: BoxDecoration(color: ThemeColor.primaryColor, borderRadius: BorderRadius.circular(10)),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: GoogleFonts.rubik(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 2.5,
+              width: active ? 26 : 0,
+              decoration: BoxDecoration(color: ThemeColor.primaryColor, borderRadius: BorderRadius.circular(2)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildPendingChatsSection() {
     if (controller.isLoading.value && controller.pendingChats.isEmpty) {

@@ -205,6 +205,7 @@ class ChatController extends GetxController {
           leidoEn: leidoEn,
           giftCode: m.giftCode,
           giftName: m.giftName,
+          storyUrl: m.storyUrl,
         );
       }
       return m;
@@ -227,6 +228,7 @@ class ChatController extends GetxController {
         esPropio: mensaje.esPropio,
         giftCode: mensaje.giftCode,
         giftName: mensaje.giftName,
+        storyUrl: mensaje.storyUrl,
       ),
     ];
     if (mensaje.esPropio || _isNearBottom()) {
@@ -262,6 +264,7 @@ class ChatController extends GetxController {
                 leidoEn: m.leidoEn,
                 giftCode: m.giftCode,
                 giftName: m.giftName,
+                storyUrl: m.storyUrl,
               ))
           .toList();
       otroUsuario.value = result.otroUsuario;

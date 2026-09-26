@@ -96,6 +96,7 @@ class SignalRService extends GetxService with WidgetsBindingObserver {
   Future<void> _doConnect(String token) async {
     _isConnecting = true;
     _connectCompleter = Completer<void>();
+    _connectCompleter!.future.ignore();
 
     try {
       await connectSignalRUsecase.execute(token);
@@ -113,6 +114,7 @@ class SignalRService extends GetxService with WidgetsBindingObserver {
       isConnected.value = false;
       print('❌ Error conectando SignalR: $e');
       _connectCompleter!.completeError(e);
+      if (!isReconnecting.value) unawaited(_scheduleReconnect());
     } finally {
       _isConnecting = false;
       _connectCompleter = null;
@@ -164,6 +166,7 @@ class SignalRService extends GetxService with WidgetsBindingObserver {
 
     _isConnecting = true; 
     _connectCompleter = Completer<void>();
+    _connectCompleter!.future.ignore();
 
     try {
       await connectSignalRUsecase.execute(token);
